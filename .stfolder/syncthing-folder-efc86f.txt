@@ -1,0 +1,5 @@
+# This directory is a Syncthing folder marker.
+# Do not delete.
+
+folderID: purat-23peu
+created: 2026-10-17T13:29:39+01:00

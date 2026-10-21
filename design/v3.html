@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relay – Live Sport Viewer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d1226;
+    --ink-2: #3a4260;
+    --faint: #5f6985;
+    --ground: #eef1f7;
+    --panel: #ffffff;
+    --line: #dde2ee;
+    --lime: #c6f432;
+    --lime-soft: #eefbb8;
+    --live: #d92c1a;
+    --blue: #2f55ff;
+    --blue-soft: #e4e9ff;
+    --pitch: #1d9a55;
+    --ease: cubic-bezier(.22, 1, .36, 1);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body { font: 14px/1.45 "Schibsted Grotesk", system-ui, sans-serif; background: var(--ground); color: var(--ink); -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  input { font: inherit; color: inherit; }
+  svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  ::selection { background: var(--lime); color: var(--ink); }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+  ::-webkit-scrollbar { width: 12px; height: 12px; } ::-webkit-scrollbar-thumb { background: #c7cee0; border-radius: 12px; border: 3px solid transparent; background-clip: padding-box; } ::-webkit-scrollbar-thumb:hover { background: #a9b3cf; background-clip: padding-box; border: 3px solid transparent; }
+
+  .app { display: grid; grid-template-rows: 60px 1fr; height: 100vh; }
+
+  /* ---------- header ---------- */
+  header { background: var(--lime); display: flex; align-items: center; padding: 0 24px; gap: 28px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 24px; letter-spacing: -.04em; }
+  .mark { position: relative; width: 26px; height: 22px; }
+  .mark i { position: absolute; left: 0; height: 8px; border-radius: 4px; background: var(--ink); }
+  .mark i:nth-child(1) { top: 0; width: 26px; } .mark i:nth-child(2) { top: 7px; left: 6px; width: 20px; opacity: .55; } .mark i:nth-child(3) { top: 14px; left: 12px; width: 14px; opacity: .25; }
+  .head-r { margin-left: auto; display: flex; align-items: center; gap: 18px; font-weight: 500; }
+  .health { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border-radius: 999px; background: var(--ink); color: #fff; font-weight: 600; font-size: 13px; }
+  .health:hover { background: #1c2340; }
+  .health b { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); }
+  .clock { font-weight: 600; }
+
+  /* ---------- layout ---------- */
+  .body { display: grid; grid-template-columns: 340px minmax(0, 1fr); min-height: 0; }
+
+  /* ---------- left column ---------- */
+  .left { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+  .tabs { display: flex; gap: 22px; padding: 0 20px; border-bottom: 1px solid var(--line); }
+  .tabs button { padding: 16px 0 13px; font-weight: 600; color: var(--faint); border-bottom: 3px solid transparent; margin-bottom: -1px; }
+  .tabs button.on { color: var(--ink); border-color: var(--ink); }
+  .tabs button span { margin-left: 6px; font-weight: 500; font-size: 12px; color: var(--faint); }
+  .search { margin: 14px 16px 6px; position: relative; }
+  .search svg { position: absolute; left: 12px; top: 50%; margin-top: -9px; color: var(--faint); }
+  .search input { width: 100%; height: 40px; padding: 0 12px 0 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--ground); outline: none; transition: border-color .15s, background .15s; }
+  .search input::placeholder { color: var(--faint); }
+  .search input:focus { background: #fff; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+  .sports { display: flex; gap: 4px; padding: 8px 16px 12px; overflow-x: auto; scrollbar-width: none; }
+  .sports button { height: 30px; padding: 0 12px; border-radius: 8px; font-weight: 600; font-size: 13px; color: var(--ink-2); white-space: nowrap; transition: background .15s; }
+  .sports button:hover { background: var(--ground); }
+  .sports button.on { background: var(--ink); color: #fff; }
+  .list { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+  .group { position: sticky; top: 0; z-index: 1; background: rgba(255,255,255,.97); padding: 12px 20px 6px; font-weight: 700; font-size: 12px; color: var(--faint); text-transform: uppercase; letter-spacing: .06em; display: flex; justify-content: space-between; }
+  .ev { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; gap: 12px; width: 100%; text-align: left; align-items: center; padding: 11px 20px; border-bottom: 1px solid #edf0f6; position: relative; transition: background .12s; }
+  .ev:hover { background: var(--ground); }
+  .ev.on { background: var(--lime-soft); }
+  .ev.on::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--ink); }
+  .ev .when { font-weight: 700; font-size: 13px; }
+  .ev .when.live { color: #fff; background: var(--live); border-radius: 6px; text-align: center; padding: 2px 0; font-size: 12px; }
+  .ev .tm { display: flex; flex-direction: column; min-width: 0; }
+  .ev .tm b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ev .tm b + b { font-weight: 500; color: var(--ink-2); }
+  .ev .tm small { color: var(--faint); font-size: 12px; margin-top: 2px; }
+  .ev .meta { text-align: right; font-size: 12px; color: var(--faint); font-weight: 500; }
+  .ev .meta b { display: block; font-size: 15px; color: var(--ink); font-weight: 700; }
+  .empty { padding: 48px 24px; color: var(--faint); text-align: center; }
+
+  .srcs { padding: 16px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+  .src { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; align-items: center; }
+  .src b { font-weight: 700; } .src span { color: var(--faint); font-size: 12px; grid-column: 1; }
+  .src .state { grid-row: 1 / 3; grid-column: 2; display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; }
+  .sw { width: 40px; height: 24px; border-radius: 12px; background: #c3cadd; position: relative; transition: background .2s; }
+  .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .25s var(--ease); box-shadow: 0 1px 2px rgba(13,18,38,.3); }
+  .sw[aria-checked="true"] { background: var(--ink); } .sw[aria-checked="true"]::after { transform: translateX(16px); background: var(--lime); }
+  .src.off b, .src.off span { opacity: .5; }
+
+  /* ---------- main ---------- */
+  .main { overflow-y: auto; padding: 24px 32px 40px; }
+  .wrap { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+  .titlebar { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+  .titlebar h1 { font-size: 34px; line-height: 1.05; font-weight: 800; letter-spacing: -.035em; text-wrap: balance; }
+  .titlebar h1 span { color: var(--faint); font-weight: 600; margin: 0 .25em; }
+  .sub { margin-top: 8px; display: flex; align-items: center; gap: 10px; color: var(--ink-2); font-weight: 500; }
+  .pill-live { display: inline-flex; align-items: center; gap: 6px; background: var(--live); color: #fff; font-weight: 700; font-size: 12px; padding: 2px 9px; border-radius: 6px; }
+  .pill-live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: blink 1.4s ease-in-out infinite; }
+  @keyframes blink { 50% { opacity: .25; } }
+  .btns { display: flex; gap: 8px; }
+  .btn { height: 38px; padding: 0 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; border: 1px solid var(--line); background: #fff; transition: border-color .15s, background .15s; }
+  .btn:hover { border-color: var(--ink); }
+  .btn.solid { background: var(--ink); color: #fff; border-color: var(--ink); } .btn.solid:hover { background: #1c2340; }
+
+  .player { background: #fff; border-radius: 16px; border: 1px solid var(--line); overflow: hidden; }
+  .screen { position: relative; aspect-ratio: 16 / 9; background: var(--pitch); }
+  .screen svg.field { position: absolute; inset: 0; width: 100%; height: 100%; stroke: rgba(255,255,255,.85); stroke-width: 2; }
+  .bug { position: absolute; left: 16px; top: 16px; display: flex; border-radius: 8px; overflow: hidden; font-weight: 700; box-shadow: 0 2px 10px rgba(13,18,38,.28); }
+  .bug div { padding: 7px 12px; background: #fff; } .bug .sc { background: var(--ink); color: #fff; font-size: 17px; letter-spacing: .02em; } .bug .tk { background: var(--lime); }
+  .sourcetag { position: absolute; right: 16px; top: 16px; background: rgba(13,18,38,.78); color: #fff; padding: 6px 11px; border-radius: 8px; font-weight: 600; font-size: 12px; }
+  .bigplay { position: absolute; inset: 0; margin: auto; width: 76px; height: 76px; border-radius: 50%; background: var(--lime); color: var(--ink); display: grid; place-items: center; box-shadow: 0 8px 24px rgba(13,18,38,.3); transition: transform .3s var(--ease); }
+  .bigplay:hover { transform: scale(1.08); } .bigplay svg { width: 30px; height: 30px; fill: var(--ink); stroke: none; margin-left: 3px; }
+  .bar { display: flex; align-items: center; gap: 4px; padding: 8px 12px; border-top: 1px solid var(--line); }
+  .ib { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; color: var(--ink-2); }
+  .ib:hover { background: var(--ground); color: var(--ink); }
+  .timeline { flex: 1; height: 6px; margin: 0 14px; border-radius: 3px; background: var(--line); position: relative; }
+  .timeline i { position: absolute; left: 0; top: 0; bottom: 0; width: 96%; background: var(--ink); border-radius: 3px; }
+  .golive { height: 32px; padding: 0 12px; border-radius: 8px; background: var(--lime); font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; gap: 7px; }
+  .golive:hover { background: #b9e621; }
+  .golive::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--live); }
+  .q { font-weight: 700; font-size: 13px; padding: 0 10px; color: var(--ink-2); }
+
+  /* ---------- sync ladder ---------- */
+  .ladder { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px 14px; }
+  .ladder-h { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 4px; }
+  .ladder-h h2 { font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
+  .ladder-h p { color: var(--faint); font-size: 13px; }
+  .axis { display: grid; grid-template-columns: 190px 1fr 96px; align-items: center; color: var(--faint); font-size: 12px; font-weight: 500; padding: 14px 0 6px; }
+  .ticks { position: relative; height: 16px; }
+  .ticks span { position: absolute; top: 0; transform: translateX(-50%); }
+  .ticks span:first-child { transform: none; } .ticks span:last-child { transform: translateX(-100%); }
+  .row { display: grid; grid-template-columns: 190px 1fr 96px; align-items: center; width: 100%; text-align: left; padding: 10px 10px; margin: 0 -10px; width: calc(100% + 20px); border-radius: 10px; transition: background .12s; }
+  .row:hover { background: var(--ground); }
+  .row.on { background: var(--lime-soft); }
+  .row .nm b { display: block; font-weight: 700; } .row .nm span { font-size: 12px; color: var(--faint); }
+  .lane { position: relative; height: 26px; background-image: repeating-linear-gradient(90deg, #e7ebf4 0, #e7ebf4 1px, transparent 1px, transparent 25%); background-position: 0 0; border-right: 1px solid #e7ebf4; }
+  .lane::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: #eef1f7; }
+  .fill { position: absolute; top: 3px; bottom: 3px; right: 0; border-radius: 6px; background: var(--blue); transition: width .9s var(--ease); display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: #fff; font-weight: 700; font-size: 12px; min-width: 6px; }
+  .row.lead .fill { background: var(--ink); }
+  .row.on .fill { outline: 3px solid var(--lime); outline-offset: 0; }
+  .row.dead .fill { background: transparent; border: 1.5px dashed #aab3cb; width: 100% !important; color: var(--faint); justify-content: center; padding: 0; }
+  .row .rd { text-align: right; font-weight: 700; font-size: 15px; }
+  .row .rd small { display: block; font-size: 11px; font-weight: 500; color: var(--faint); }
+  .row.dead { opacity: .75; cursor: not-allowed; }
+  .legend { display: flex; justify-content: space-between; color: var(--faint); font-size: 12px; padding: 10px 0 2px; border-top: 1px solid #edf0f6; margin-top: 6px; }
+
+  @media (max-width: 960px) {
+    html, body { height: auto; } body { overflow: auto; }
+    .app { height: auto; } .body { grid-template-columns: 1fr; } .left { order: 2; border-right: 0; border-top: 1px solid var(--line); max-height: 640px; }
+    .main { padding: 18px 16px 28px; overflow: visible; } .titlebar { flex-direction: column; align-items: flex-start; } .titlebar h1 { font-size: 26px; }
+    .axis, .row { grid-template-columns: 110px 1fr 70px; } header { padding: 0 16px; } .clock { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo"><span class="mark"><i></i><i></i><i></i></span>relay</div>
+    <div class="head-r">
+      <span class="clock" id="clock"></span>
+      <button class="health" id="health"><b></b><span id="healthTxt">4 sources online</span></button>
+    </div>
+  </header>
+
+  <div class="body">
+    <aside class="left">
+      <div class="tabs" id="tabs">
+        <button class="on" data-tab="events">Events<span id="evN">0</span></button>
+        <button data-tab="sources">Sources</button>
+      </div>
+      <div id="evPane" style="display:flex;flex-direction:column;min-height:0;flex:1">
+        <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" placeholder="Search teams or leagues" autocomplete="off" aria-label="Search events"></label>
+        <div class="sports" id="sports"></div>
+        <div class="list" id="list"></div>
+      </div>
+      <div class="srcs" id="srcPane" style="display:none"></div>
+    </aside>
+
+    <main class="main">
+      <div class="wrap">
+        <div class="titlebar">
+          <div>
+            <h1 id="title"></h1>
+            <div class="sub" id="sub"></div>
+          </div>
+          <div class="btns">
+            <button class="btn"><svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8 8M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>Pop out</button>
+            <button class="btn solid"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="7" rx="1.5"/><rect x="13" y="4" width="8" height="7" rx="1.5"/><rect x="3" y="13" width="8" height="7" rx="1.5"/><rect x="13" y="13" width="8" height="7" rx="1.5"/></svg>Add to multiview</button>
+          </div>
+        </div>
+
+        <section class="player" aria-label="Player">
+          <div class="screen">
+            <svg class="field" viewBox="0 0 160 90" preserveAspectRatio="none" fill="none"><rect x="8" y="6" width="144" height="78"/><path d="M80 6v78"/><circle cx="80" cy="45" r="11"/><rect x="8" y="28" width="18" height="34"/><rect x="134" y="28" width="18" height="34"/><rect x="8" y="37" width="7" height="16"/><rect x="145" y="37" width="7" height="16"/></svg>
+            <div class="bug"><div id="bA">LIV</div><div class="sc" id="bS">1 – 0</div><div id="bB">MCI</div><div class="tk" id="bT">63:12</div></div>
+            <div class="sourcetag" id="srcTag">Feed 1 · 1080p</div>
+            <button class="bigplay" id="bigplay" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M6 4v16l14-8z"/></svg></button>
+          </div>
+          <div class="bar">
+            <button class="ib" id="pp" aria-label="Play or pause"><svg viewBox="0 0 24 24" id="ppI"><path d="M8 5v14M16 5v14"/></svg></button>
+            <button class="ib" aria-label="Volume"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4zM15.5 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg></button>
+            <div class="timeline"><i></i></div>
+            <button class="golive">Go live</button>
+            <span class="q" id="qual">1080p</span>
+            <button class="ib" aria-label="Fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg></button>
+          </div>
+        </section>
+
+        <section class="ladder" aria-label="Feed sync">
+          <div class="ladder-h"><h2>Feeds, lined up by match clock</h2><p id="ladderNote"></p></div>
+          <div class="axis"><span></span><div class="ticks" id="ticks"></div><span></span></div>
+          <div id="rows"></div>
+          <div class="legend"><span>Bars end at the furthest-ahead feed. A shorter bar means that feed is behind the live action.</span><span id="upd">Updated just now</span></div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+const SITES = [
+  { id: 'roxie', name: 'Roxiestreams', host: 'roxiestreams.live', on: true },
+  { id: 'timst', name: 'Timst', host: 'timst.top', on: true },
+  { id: 'streamed', name: 'Streamed', host: 'streamed.pk', on: true },
+  { id: 'manual', name: 'Manual URL', host: 'Paste any .m3u8 link', on: true },
+];
+const SPORTS = [['all','All'],['soccer','Soccer'],['basketball','Basketball'],['nfl','NFL'],['baseball','Baseball'],['combat','Combat'],['motor','Motorsport']];
+// m: minutes until start (negative = started that long ago)
+const EV = [
+  { id:1, sp:'soccer', lg:'Premier League', a:'Liverpool', b:'Man City', m:-63, sc:[1,0], tk:'63:12', feeds:['roxie','timst','streamed'] },
+  { id:2, sp:'soccer', lg:'La Liga', a:'Real Madrid', b:'Barcelona', m:-25, sc:[0,0], tk:'25:40', feeds:['timst','streamed'] },
+  { id:3, sp:'basketball', lg:'NBA', a:'Lakers', b:'Celtics', m:-48, sc:[58,61], tk:'Q3 4:20', feeds:['roxie','streamed'] },
+  { id:4, sp:'nfl', lg:'NFL', a:'Chiefs', b:'Bills', m:-75, sc:[17,14], tk:'Q3 8:02', feeds:['roxie','timst','streamed'] },
+  { id:5, sp:'motor', lg:'Formula 1', a:'US Grand Prix', b:'', m:-30, sc:null, tk:'Lap 31/56', feeds:['roxie','streamed'] },
+  { id:6, sp:'soccer', lg:'Serie A', a:'Inter', b:'Juventus', m:40, feeds:['roxie','streamed'] },
+  { id:7, sp:'baseball', lg:'MLB', a:'Yankees', b:'Dodgers', m:20, feeds:['roxie','timst'] },
+  { id:8, sp:'soccer', lg:'Bundesliga', a:'Bayern', b:'Dortmund', m:135, feeds:['roxie','timst','streamed'] },
+  { id:9, sp:'basketball', lg:'NBA', a:'Warriors', b:'Nuggets', m:95, feeds:['roxie','timst'] },
+  { id:10, sp:'combat', lg:'UFC 320', a:'Pereira', b:'Hill', m:300, feeds:['roxie','timst','streamed'] },
+  { id:11, sp:'nfl', lg:'NFL', a:'Eagles', b:'Cowboys', m:210, feeds:['streamed'] },
+];
+const FEEDS = [
+  { id:0, name:'Feed 1', site:'Roxiestreams · admin2', q:'1080p', lag:0, clock:'63:12' },
+  { id:1, name:'Feed 2', site:'Timst', q:'720p', lag:14, clock:'62:58' },
+  { id:2, name:'Feed 3', site:'Streamed · alpha', q:'720p', lag:31, clock:'62:41' },
+  { id:3, name:'Feed 4', site:'Streamed · bravo', q:'—', lag:null, clock:null },
+];
+const MAXLAG = 40;
+const $ = (s) => document.querySelector(s);
+const st = { sp:'all', q:'', ev:1, feed:0, tab:'events', playing:false };
+const siteOn = (id) => SITES.find(s => s.id === id).on;
+const visFeeds = (e) => e.feeds.filter(siteOn);
+const fmt = (m) => m < 0 ? Math.min(-m, 90) + "'" : new Date(Date.now() + m*60000).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', hour12:false });
+
+function list() {
+  const q = st.q.toLowerCase();
+  return EV.filter(e => (st.sp==='all' || e.sp===st.sp) && (e.a+' '+e.b+' '+e.lg).toLowerCase().includes(q) && visFeeds(e).length);
+}
+function renderSports() {
+  $('#sports').innerHTML = SPORTS.map(([k,l]) => `<button class="${st.sp===k?'on':''}" data-sp="${k}">${l}</button>`).join('');
+}
+function renderList() {
+  const l = list(); $('#evN').textContent = l.length;
+  const live = l.filter(e=>e.m<0), soon = l.filter(e=>e.m>=0).sort((a,b)=>a.m-b.m);
+  const row = (e) => `<button class="ev ${e.id===st.ev?'on':''}" data-ev="${e.id}">
+      <span class="when ${e.m<0?'live':''}">${fmt(e.m)}</span>
+      <span class="tm"><b>${e.a}</b>${e.b?`<b>${e.b}</b>`:''}<small>${e.lg}</small></span>
+      <span class="meta">${e.sc?`<b>${e.sc[0]}–${e.sc[1]}</b>`:''}${visFeeds(e).length} feed${visFeeds(e).length>1?'s':''}</span></button>`;
+  $('#list').innerHTML = (live.length ? `<div class="group"><span>Live now</span><span>${live.length}</span></div>`+live.map(row).join('') : '')
+    + (soon.length ? `<div class="group"><span>Later today</span><span>${soon.length}</span></div>`+soon.map(row).join('') : '')
+    || `<div class="empty">No events match.<br>Clear the search or pick another sport.</div>`;
+}
+function renderSources() {
+  $('#srcPane').innerHTML = SITES.map(s => `<div class="src ${s.on?'':'off'}"><b>${s.name}</b><span>${s.host}</span>
+    <div class="state">${s.on?'Online':'Off'}<button class="sw" role="switch" aria-checked="${s.on}" aria-label="${s.name}" data-site="${s.id}"></button></div></div>`).join('');
+  const n = SITES.filter(s=>s.on).length; $('#healthTxt').textContent = `${n} source${n!==1?'s':''} online`;
+}
+function renderMain() {
+  const e = EV.find(x=>x.id===st.ev), live = e.m < 0;
+  $('#title').innerHTML = e.b ? `${e.a}<span>vs</span>${e.b}` : e.a;
+  $('#sub').innerHTML = (live ? `<span class="pill-live">LIVE</span>` : `<span style="font-weight:700">Starts ${fmt(e.m)}</span>`) + `<span>${e.lg}</span>`;
+  const ab = (n) => n.slice(0,3).toUpperCase();
+  $('#bA').textContent = ab(e.a); $('#bB').textContent = e.b ? ab(e.b) : '';
+  $('#bS').textContent = e.sc ? e.sc.join(' – ') : '– –'; $('#bT').textContent = e.tk || '--:--';
+  $('#bB').style.display = e.b ? '' : 'none';
+  renderLadder();
+}
+function renderLadder() {
+  const e = EV.find(x=>x.id===st.ev);
+  const feeds = FEEDS.slice(0, Math.max(visFeeds(e).length + 1, 1)).map((f,i,a) => (visFeeds(e).length===0 ? f : f));
+  const total = Math.min(FEEDS.length, visFeeds(e).length + (visFeeds(e).length>1?1:0));
+  const fs = FEEDS.slice(0, Math.max(total,1));
+  st.feed = Math.min(st.feed, fs.length-1);
+  if (fs[st.feed].lag === null) st.feed = 0;
+  const ok = fs.filter(f=>f.lag!==null);
+  $('#ladderNote').textContent = `${ok.length} online${fs.length-ok.length?`, ${fs.length-ok.length} offline`:''}`;
+  $('#ticks').innerHTML = [0,10,20,30,40].map(s => `<span style="left:${100 - s/MAXLAG*100}%">${s===0?'Live':'−'+s+'s'}</span>`).reverse().join('');
+  $('#rows').innerHTML = fs.map((f,i) => {
+    const dead = f.lag === null, w = dead ? 100 : Math.max(8, 100 - f.lag/MAXLAG*100);
+    return `<button class="row ${i===st.feed?'on':''} ${f.lag===0?'lead':''} ${dead?'dead':''}" data-feed="${i}" ${dead?'aria-disabled="true"':''}>
+      <span class="nm"><b>${f.name}</b><span>${f.site}</span></span>
+      <span class="lane"><span class="fill" style="width:${w}%">${dead?'No signal':f.lag===0?'Leader':'−'+f.lag+'s'}</span></span>
+      <span class="rd">${dead?'—':f.clock}<small>${dead?'offline':f.q}</small></span></button>`;
+  }).join('');
+  const cur = fs[st.feed]; $('#srcTag').textContent = `${cur.name} · ${cur.q}`; $('#qual').textContent = cur.q;
+}
+function renderAll(){ renderSports(); renderList(); renderSources(); renderMain(); }
+
+document.addEventListener('click', (ev) => {
+  const t = ev.target.closest('button'); if (!t) return;
+  if (t.dataset.sp) { st.sp = t.dataset.sp; renderSports(); renderList(); }
+  else if (t.dataset.ev) { st.ev = +t.dataset.ev; st.feed = 0; renderList(); renderMain(); }
+  else if (t.dataset.feed !== undefined) { if (FEEDS[+t.dataset.feed].lag === null) return; st.feed = +t.dataset.feed; renderLadder(); }
+  else if (t.dataset.tab) { st.tab = t.dataset.tab; document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on', b===t)); $('#evPane').style.display = st.tab==='events'?'flex':'none'; $('#srcPane').style.display = st.tab==='sources'?'flex':'none'; }
+  else if (t.dataset.site) { const s = SITES.find(x=>x.id===t.dataset.site); s.on = !s.on; renderSources(); renderList(); renderMain(); }
+  else if (t.id === 'health') document.querySelector('[data-tab="sources"]').click();
+  else if (t.id === 'pp' || t.id === 'bigplay') {
+    st.playing = !st.playing; $('#bigplay').style.display = st.playing ? 'none' : '';
+    $('#ppI').innerHTML = st.playing ? '<path d="M8 5v14M16 5v14"/>' : '<path d="M7 5v14l12-7z"/>';
+  }
+});
+$('#q').addEventListener('input', (e) => { st.q = e.target.value; renderList(); });
+
+// feeds drift a little, like the real thing
+setInterval(() => {
+  FEEDS.forEach(f => { if (f.lag > 0) f.lag = Math.max(2, Math.min(38, f.lag + Math.round((Math.random()-.5)*4))); });
+  renderLadder(); $('#upd').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}, 3000);
+$('#clock').textContent = new Date().toLocaleDateString([], { weekday:'short', day:'numeric', month:'short' });
+$('#ppI').innerHTML = '<path d="M7 5v14l12-7z"/>';
+renderAll();
+</script>
+</body>
+</html>

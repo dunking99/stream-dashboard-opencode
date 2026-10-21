@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stream Dashboard – Design Concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #12151c;
+    --panel-2: #181c25;
+    --line: #232834;
+    --text: #e9ecf3;
+    --muted: #8b93a7;
+    --faint: #7d869b;
+    --accent: #5b8cff;
+    --accent-soft: rgba(91,140,255,.14);
+    --live: #ff4d5e;
+    --live-soft: rgba(255,77,94,.14);
+    --ok: #3ddc97;
+    --warn: #ffb547;
+    --radius: 14px;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f5f8; --panel: #ffffff; --panel-2: #f0f2f6; --line: #e2e5ec;
+    --text: #151821; --muted: #5d657a; --faint: #6b7388;
+    --accent: #3b6df0; --accent-soft: rgba(59,109,240,.10);
+    --live-soft: rgba(255,77,94,.10);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font: 14px/1.45 Inter, system-ui, sans-serif; background: var(--bg); color: var(--text);
+    height: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  input { font: inherit; color: inherit; }
+  svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  .app { display: grid; grid-template-columns: 64px 1fr 400px; grid-template-rows: 56px 1fr; height: 100vh; }
+
+  /* ---------- top bar ---------- */
+  .topbar { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; padding: 0 20px 0 0; border-bottom: 1px solid var(--line); background: var(--panel); }
+  .brand { width: 64px; display: grid; place-items: center; height: 100%; border-right: 1px solid var(--line); }
+  .logo { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--accent), #8f6bff); display: grid; place-items: center; color: #fff; }
+  .logo svg { width: 16px; height: 16px; fill: #fff; stroke: none; }
+  .title { font-weight: 600; letter-spacing: -.01em; }
+  .title small { color: var(--faint); font-weight: 500; margin-left: 8px; }
+  .search { margin-left: auto; position: relative; width: 300px; }
+  .search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--faint); }
+  .search input { width: 100%; height: 36px; padding: 0 12px 0 36px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; outline: none; }
+  .search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .sites { display: flex; gap: 6px; }
+  .site { display: flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); color: var(--muted); font-size: 12px; font-weight: 500; transition: .15s; }
+  .site i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(61,220,151,.15); }
+  .site.off { opacity: .55; } .site.off i { background: var(--faint); box-shadow: none; }
+  .site:hover { color: var(--text); }
+  .icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; color: var(--muted); }
+  .icon-btn:hover { background: var(--panel-2); color: var(--text); }
+
+  /* ---------- rail ---------- */
+  .rail { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 0; }
+  .rail button { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: var(--muted); font-size: 18px; position: relative; transition: .15s; }
+  .rail button:hover { background: var(--panel-2); color: var(--text); }
+  .rail button.active { background: var(--accent-soft); color: var(--accent); }
+  .rail button.active::before { content: ""; position: absolute; left: -10px; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; background: var(--accent); }
+  .rail .tip { position: absolute; left: 54px; padding: 4px 9px; border-radius: 7px; background: var(--text); color: var(--bg); font-size: 12px; font-weight: 500; white-space: nowrap; pointer-events: none; opacity: 0; transform: translateX(-4px); transition: .15s; z-index: 10; }
+  .rail button:hover .tip { opacity: 1; transform: none; }
+
+  /* ---------- stage ---------- */
+  .stage { overflow-y: auto; padding: 20px 24px 28px; display: flex; flex-direction: column; gap: 18px; }
+  .match-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+  .crumbs { color: var(--faint); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; display: flex; align-items: center; gap: 8px; }
+  h1 { font-size: 26px; letter-spacing: -.02em; font-weight: 650; margin-top: 4px; }
+  h1 em { font-style: normal; color: var(--faint); font-weight: 500; margin: 0 6px; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: .04em; }
+  .badge.live { background: var(--live-soft); color: var(--live); }
+  .badge.live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--live); animation: pulse 1.4s infinite; }
+  .badge.soon { background: var(--accent-soft); color: var(--accent); }
+  @keyframes pulse { 50% { opacity: .3; } }
+  .actions { display: flex; gap: 8px; }
+  .btn { height: 36px; padding: 0 14px; display: inline-flex; align-items: center; gap: 8px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); font-weight: 500; transition: .15s; }
+  .btn:hover { border-color: var(--faint); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .player { position: relative; aspect-ratio: 16 / 9; max-height: calc(100vh - 340px); width: 100%; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); background: #06080c;
+    box-shadow: 0 30px 60px -30px rgba(0,0,0,.6); }
+  .pitch { position: absolute; inset: 0; transition: opacity .3s;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 80px, transparent 80px 160px),
+      radial-gradient(ellipse at 50% 120%, #1d6b3a, #0e3a21 60%, #07190f); }
+  .pitch::before { content: ""; position: absolute; inset: 9% 6%; border: 2px solid rgba(255,255,255,.22); border-radius: 4px; }
+  .pitch::after { content: ""; position: absolute; left: 50%; top: 9%; bottom: 9%; width: 2px; background: rgba(255,255,255,.22); box-shadow: 0 0 0 0 transparent; }
+  .circle { position: absolute; left: 50%; top: 50%; width: 18%; aspect-ratio: 1; transform: translate(-50%,-50%); border: 2px solid rgba(255,255,255,.22); border-radius: 50%; }
+  .player .shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.55), transparent 22%, transparent 70%, rgba(0,0,0,.75)); }
+  .score { position: absolute; top: 18px; left: 18px; display: flex; align-items: stretch; border-radius: 12px; overflow: hidden; background: rgba(10,12,18,.72); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.1); font-weight: 600; }
+  .score div { padding: 8px 14px; display: flex; align-items: center; gap: 10px; }
+  .score .n { font-family: var(--mono); font-size: 18px; }
+  .score .clk { background: rgba(255,255,255,.08); font-family: var(--mono); color: #fff; }
+  .score .clk b { color: var(--live); font-weight: 500; font-size: 11px; }
+  .src-pill { position: absolute; top: 18px; right: 18px; display: flex; gap: 8px; align-items: center; padding: 7px 12px; border-radius: 999px; background: rgba(10,12,18,.72); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.1); font-size: 12px; font-weight: 500; color: #e9ecf3; }
+  .controls { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 18px 16px; color: #fff; display: flex; flex-direction: column; gap: 10px; }
+  .scrub { height: 4px; border-radius: 4px; background: rgba(255,255,255,.2); position: relative; }
+  .scrub span { position: absolute; inset: 0 0 0 auto; left: 0; width: 97%; background: var(--live); border-radius: 4px; }
+  .scrub span::after { content: ""; position: absolute; right: -6px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: #fff; }
+  .ctrl-row { display: flex; align-items: center; gap: 6px; }
+  .ctrl-row .icon-btn { color: #fff; }
+  .ctrl-row .icon-btn:hover { background: rgba(255,255,255,.14); color: #fff; }
+  .ctrl-row .gap { flex: 1; }
+  .to-live { height: 28px; padding: 0 11px; border-radius: 999px; background: rgba(255,255,255,.14); font-size: 12px; font-weight: 600; }
+  .to-live:hover { background: rgba(255,255,255,.22); }
+  .quality { font-size: 12px; font-weight: 600; padding: 0 8px; opacity: .85; }
+
+  .sources-head { display: flex; align-items: center; justify-content: space-between; }
+  .sources-head h2 { font-size: 15px; font-weight: 600; }
+  .sources-head span { color: var(--faint); font-size: 12px; }
+  .source-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+  .source { text-align: left; padding: 14px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; transition: .15s; position: relative; }
+  .source:hover { border-color: var(--faint); transform: translateY(-1px); }
+  .source.active { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), var(--panel)); }
+  .source .top { display: flex; align-items: center; justify-content: space-between; }
+  .source .name { font-weight: 600; }
+  .source .host { color: var(--faint); font-size: 12px; }
+  .source .meta { display: flex; gap: 14px; font-size: 12px; color: var(--muted); }
+  .source .meta b { font-family: var(--mono); font-weight: 500; color: var(--text); }
+  .tag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+  .tag.best { background: rgba(61,220,151,.14); color: var(--ok); }
+  .tag.behind { background: rgba(255,181,71,.14); color: var(--warn); }
+  .tag.dead { background: var(--panel-2); color: var(--faint); }
+  .bars { display: flex; gap: 2px; align-items: flex-end; height: 12px; }
+  .bars i { width: 3px; background: var(--ok); border-radius: 1px; }
+  .source.dead { opacity: .55; }
+
+  /* ---------- sidebar ---------- */
+  .side { background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+  .tabs { display: flex; padding: 14px 16px 0; gap: 4px; }
+  .tab { flex: 1; height: 38px; border-radius: 10px; color: var(--muted); font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .tab .count { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--panel-2); color: var(--muted); }
+  .tab.active { background: var(--panel-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
+  .filters { display: flex; gap: 6px; padding: 14px 16px 10px; overflow-x: auto; scrollbar-width: none; }
+  .chip { height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-size: 12px; font-weight: 500; white-space: nowrap; transition: .15s; }
+  .chip:hover { color: var(--text); }
+  .chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .seg { margin: 0 16px 8px; display: flex; padding: 3px; border-radius: 10px; background: var(--panel-2); }
+  .seg button { flex: 1; height: 28px; border-radius: 8px; color: var(--muted); font-size: 12px; font-weight: 500; }
+  .seg button.active { background: var(--panel); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .list { flex: 1; overflow-y: auto; padding: 4px 10px 16px; }
+  .group-label { padding: 14px 8px 6px; font-size: 11px; font-weight: 600; color: var(--faint); letter-spacing: .08em; text-transform: uppercase; }
+  .event { width: 100%; text-align: left; display: grid; grid-template-columns: 54px 1fr auto; gap: 12px; align-items: center; padding: 11px 10px; border-radius: 12px; transition: background .12s; border: 1px solid transparent; }
+  .event:hover { background: var(--panel-2); }
+  .event.active { background: var(--accent-soft); border-color: rgba(91,140,255,.35); }
+  .event .time { font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: center; }
+  .event .time.live { color: var(--live); font-weight: 500; }
+  .event .teams { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .event .teams span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+  .event .teams span + span { color: var(--muted); font-weight: 400; }
+  .event .src { display: flex; }
+  .event .src b { width: 22px; height: 22px; border-radius: 50%; margin-left: -6px; display: grid; place-items: center; font-size: 10px; font-weight: 700; color: #fff; border: 2px solid var(--panel); }
+  .event.active .src b { border-color: #1a2236; }
+  .empty { padding: 40px 20px; text-align: center; color: var(--faint); }
+
+  .panel-sources { padding: 14px 16px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .site-card { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--panel-2); display: flex; align-items: center; gap: 12px; }
+  .site-card .av { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-weight: 700; color: #fff; }
+  .site-card .info { flex: 1; } .site-card .info b { display: block; font-weight: 600; } .site-card .info span { color: var(--faint); font-size: 12px; }
+  .switch { width: 36px; height: 21px; border-radius: 999px; background: var(--line); position: relative; transition: .2s; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 15px; height: 15px; border-radius: 50%; background: #fff; transition: .2s; }
+  .switch.on { background: var(--accent); } .switch.on::after { left: 18px; }
+  .note { font-size: 12px; color: var(--faint); padding: 4px 2px; }
+
+  ::-webkit-scrollbar { width: 10px; } ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 10px; border: 3px solid transparent; background-clip: padding-box; }
+
+  @media (max-width: 1180px) { .app { grid-template-columns: 64px 1fr 340px; } .sites, .search { display: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand"><div class="logo"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+    <div class="title">Stream Dashboard <small id="clock">Sun 18 Oct</small></div>
+    <div class="search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" placeholder="Search teams or events…" autocomplete="off">
+    </div>
+    <div class="sites" id="siteBar"></div>
+    <button class="icon-btn" id="theme" title="Toggle theme"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </header>
+
+  <nav class="rail" id="rail"></nav>
+
+  <main class="stage">
+    <div class="match-head">
+      <div>
+        <div class="crumbs"><span id="crSport">Soccer</span> · <span id="crLeague">Premier League</span> <span class="badge live" id="stBadge">LIVE</span></div>
+        <h1 id="title">Liverpool<em>vs</em>Man City</h1>
+      </div>
+      <div class="actions">
+        <button class="btn"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M21 14v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h6"/></svg>Pop out</button>
+        <button class="btn primary"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/></svg>Share</button>
+      </div>
+    </div>
+
+    <section class="player">
+      <div class="pitch"><div class="circle"></div></div>
+      <div class="shade"></div>
+      <div class="score">
+        <div>LIV <span class="n" id="sh">1</span></div>
+        <div><span class="n" id="sa">0</span> MCI</div>
+        <div class="clk"><b>LIVE</b> <span id="mclock">63:12</span></div>
+      </div>
+      <div class="src-pill"><svg viewBox="0 0 24 24" style="width:14px"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01"/></svg><span id="srcPill">Stream 1 · 1080p</span></div>
+      <div class="controls">
+        <div class="scrub"><span></span></div>
+        <div class="ctrl-row">
+          <button class="icon-btn" id="play" title="Play / pause"><svg viewBox="0 0 24 24" id="playIcon"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+          <button class="icon-btn" title="Mute"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4zM16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+          <button class="to-live">● Go live</button>
+          <span class="gap"></span>
+          <span class="quality">1080p</span>
+          <button class="icon-btn" title="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+          <button class="icon-btn" title="Fullscreen"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+        </div>
+      </div>
+    </section>
+
+    <div class="sources-head"><h2>Streams for this match</h2><span id="srcSummary">3 live · 1 offline</span></div>
+    <div class="source-row" id="sources"></div>
+  </main>
+
+  <aside class="side">
+    <div class="tabs">
+      <button class="tab active" data-tab="events">Events <span class="count" id="evCount">0</span></button>
+      <button class="tab" data-tab="sites">Sites</button>
+    </div>
+    <div id="eventsPane" style="display:flex;flex-direction:column;min-height:0;flex:1">
+      <div class="filters" id="filters"></div>
+      <div class="seg" id="seg">
+        <button class="active" data-f="all">All</button><button data-f="live">Live now</button><button data-f="soon">Upcoming</button>
+      </div>
+      <div class="list" id="events"></div>
+    </div>
+    <div class="panel-sources" id="sitesPane" style="display:none"></div>
+  </aside>
+</div>
+
+<script>
+const SITES = [
+  { id: 'R', name: 'Roxiestreams', host: 'roxiestreams.live', color: '#e0572f', on: true },
+  { id: 'T', name: 'Timst', host: 'timst.top', color: '#7a5cf0', on: true },
+  { id: 'S', name: 'Streamed', host: 'streamed.pk', color: '#1fa67a', on: true },
+  { id: 'M', name: 'Manual URL', host: 'paste your own .m3u8', color: '#5b6377', on: true },
+];
+const SPORTS = [
+  { id: 'soccer', label: 'Soccer', icon: '⚽' }, { id: 'basketball', label: 'Basketball', icon: '🏀' },
+  { id: 'football', label: 'American football', icon: '🏈' }, { id: 'baseball', label: 'Baseball', icon: '⚾' },
+  { id: 'hockey', label: 'Hockey', icon: '🏒' }, { id: 'fight', label: 'Fighting', icon: '🥊' }, { id: 'motor', label: 'Motorsport', icon: '🏎️' },
+];
+// t: minutes from now (negative = already started)
+const EVENTS = [
+  { id: 1, sport: 'soccer', league: 'Premier League', a: 'Liverpool', b: 'Man City', t: -63, sites: ['R','T','S'], score: [1,0] },
+  { id: 2, sport: 'soccer', league: 'La Liga', a: 'Real Madrid', b: 'Barcelona', t: -22, sites: ['T','S'], score: [0,0] },
+  { id: 3, sport: 'soccer', league: 'Serie A', a: 'Inter', b: 'Juventus', t: 40, sites: ['R','S'] },
+  { id: 4, sport: 'soccer', league: 'Bundesliga', a: 'Bayern Munich', b: 'Dortmund', t: 135, sites: ['R','T','S'] },
+  { id: 5, sport: 'basketball', league: 'NBA', a: 'Lakers', b: 'Celtics', t: -48, sites: ['R','S'], score: [58,61] },
+  { id: 6, sport: 'basketball', league: 'NBA', a: 'Warriors', b: 'Nuggets', t: 95, sites: ['R','T'] },
+  { id: 7, sport: 'football', league: 'NFL', a: 'Chiefs', b: 'Bills', t: -75, sites: ['R','T','S'], score: [17,14] },
+  { id: 8, sport: 'football', league: 'NFL', a: 'Eagles', b: 'Cowboys', t: 210, sites: ['S'] },
+  { id: 9, sport: 'baseball', league: 'MLB', a: 'Yankees', b: 'Dodgers', t: 20, sites: ['R','T'] },
+  { id: 10, sport: 'hockey', league: 'NHL', a: 'Bruins', b: 'Rangers', t: 180, sites: ['T'] },
+  { id: 11, sport: 'fight', league: 'UFC 320', a: 'Pereira', b: 'Hill', t: 300, sites: ['R','T','S'] },
+  { id: 12, sport: 'motor', league: 'Formula 1', a: 'US Grand Prix', b: 'Race', t: -30, sites: ['R','S'] },
+];
+const STREAMS = [
+  { name: 'Stream 1', host: 'roxiestreams · admin2', q: '1080p', clock: '63:12', delay: 0, bars: 4, state: 'best' },
+  { name: 'Stream 2', host: 'timst.top', q: '720p', clock: '62:58', delay: -14, bars: 3, state: 'behind' },
+  { name: 'Stream 3', host: 'streamed.pk · alpha', q: '720p', clock: '62:41', delay: -31, bars: 2, state: 'behind' },
+  { name: 'Stream 4', host: 'streamed.pk · bravo', q: '—', clock: '—', delay: 0, bars: 0, state: 'dead' },
+];
+
+const $ = (s, r = document) => r.querySelector(s);
+const state = { sport: 'all', filter: 'all', tab: 'events', event: 1, stream: 0, q: '', playing: true };
+const siteById = (id) => SITES.find(s => s.id === id);
+
+// ----- top bar sites
+function renderSiteBar() {
+  $('#siteBar').innerHTML = SITES.filter(s => s.id !== 'M').map(s =>
+    `<button class="site ${s.on ? '' : 'off'}" data-s="${s.id}"><i></i>${s.name}</button>`).join('');
+}
+// ----- rail
+function renderRail() {
+  const all = [{ id: 'all', label: 'All sports', icon: '✦' }, ...SPORTS];
+  $('#rail').innerHTML = all.map(s =>
+    `<button class="${state.sport === s.id ? 'active' : ''}" data-sport="${s.id}">${s.icon}<span class="tip">${s.label}</span></button>`).join('');
+}
+// ----- filters (league chips)
+function renderFilters() {
+  const leagues = [...new Set(EVENTS.filter(e => state.sport === 'all' || e.sport === state.sport).map(e => e.league))];
+  $('#filters').innerHTML = `<button class="chip ${!state.league ? 'active' : ''}" data-l="">All leagues</button>` +
+    leagues.map(l => `<button class="chip ${state.league === l ? 'active' : ''}" data-l="${l}">${l}</button>`).join('');
+}
+const fmtTime = (t) => {
+  if (t < 0) return `${Math.min(-t, 90)}'`;
+  const d = new Date(Date.now() + t * 60000);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+};
+function visibleEvents() {
+  return EVENTS.filter(e =>
+    (state.sport === 'all' || e.sport === state.sport) &&
+    (!state.league || e.league === state.league) &&
+    (state.filter === 'all' || (state.filter === 'live') === (e.t < 0)) &&
+    (e.a + ' ' + e.b + ' ' + e.league).toLowerCase().includes(state.q.toLowerCase())
+    && e.sites.some(id => siteById(id).on));
+}
+function renderEvents() {
+  const list = visibleEvents();
+  $('#evCount').textContent = list.length;
+  const live = list.filter(e => e.t < 0), soon = list.filter(e => e.t >= 0).sort((a, b) => a.t - b.t);
+  const row = (e) => `
+    <button class="event ${e.id === state.event ? 'active' : ''}" data-id="${e.id}">
+      <span class="time ${e.t < 0 ? 'live' : ''}">${fmtTime(e.t)}</span>
+      <span class="teams"><span>${e.a}</span><span>${e.b}</span></span>
+      <span class="src">${e.sites.filter(id => siteById(id).on).map(id => `<b style="background:${siteById(id).color}" title="${siteById(id).name}">${id}</b>`).join('')}</span>
+    </button>`;
+  let html = '';
+  if (live.length) html += `<div class="group-label">Live now · ${live.length}</div>` + live.map(row).join('');
+  if (soon.length) html += `<div class="group-label">Upcoming · ${soon.length}</div>` + soon.map(row).join('');
+  $('#events').innerHTML = html || `<div class="empty">No events match.<br>Try another sport or clear the search.</div>`;
+}
+// ----- sites pane
+function renderSitesPane() {
+  $('#sitesPane').innerHTML = SITES.map(s => `
+    <div class="site-card">
+      <div class="av" style="background:${s.color}">${s.id}</div>
+      <div class="info"><b>${s.name}</b><span>${s.host}</span></div>
+      <button class="switch ${s.on ? 'on' : ''}" data-s="${s.id}" aria-label="Toggle ${s.name}"></button>
+    </div>`).join('') + `<p class="note">Disabled sites are hidden from the events list and from the top bar status.</p>`;
+}
+// ----- stage
+function renderStage() {
+  const e = EVENTS.find(x => x.id === state.event);
+  const live = e.t < 0;
+  $('#title').innerHTML = `${e.a}<em>${live ? 'vs' : 'vs'}</em>${e.b}`;
+  const sp = SPORTS.find(s => s.id === e.sport);
+  $('#crSport').textContent = sp.label; $('#crLeague').textContent = e.league;
+  const b = $('#stBadge'); b.className = 'badge ' + (live ? 'live' : 'soon'); b.textContent = live ? 'LIVE' : 'STARTS ' + fmtTime(e.t);
+  $('#sh').textContent = e.score ? e.score[0] : '–'; $('#sa').textContent = e.score ? e.score[1] : '–';
+  $('#mclock').textContent = live ? (e.sport === 'soccer' ? `${Math.min(-e.t, 90)}:12` : 'Q' + (1 + Math.floor(-e.t / 20) % 4)) : '--:--';
+  document.querySelector('.player').style.opacity = live ? 1 : .85;
+  const n = e.sites.filter(id => siteById(id).on).length;
+  const streams = STREAMS.slice(0, Math.max(n, 1) + (n > 1 ? 1 : 0));
+  state.stream = Math.min(state.stream, streams.length - 1);
+  $('#srcSummary').textContent = `${streams.filter(s => s.state !== 'dead').length} live · ${streams.filter(s => s.state === 'dead').length} offline`;
+  $('#sources').innerHTML = streams.map((s, i) => {
+    const tag = s.state === 'best' ? `<span class="tag best">Furthest ahead</span>` : s.state === 'behind' ? `<span class="tag behind">${s.delay}s</span>` : `<span class="tag dead">Offline</span>`;
+    const bars = [4,7,10,12].map((h, k) => `<i style="height:${h}px;opacity:${k < s.bars ? 1 : .2}"></i>`).join('');
+    return `<button class="source ${i === state.stream ? 'active' : ''} ${s.state === 'dead' ? 'dead' : ''}" data-i="${i}">
+      <div class="top"><span class="name">${s.name}</span>${tag}</div>
+      <span class="host">${s.host}</span>
+      <div class="meta"><span>Clock <b>${s.clock}</b></span><span>${s.q}</span><span class="bars" style="margin-left:auto">${bars}</span></div>
+    </button>`;
+  }).join('');
+  const cur = streams[state.stream];
+  $('#srcPill').textContent = `${cur.name} · ${cur.q}`;
+}
+
+function renderAll() { renderSiteBar(); renderRail(); renderFilters(); renderEvents(); renderSitesPane(); renderStage(); }
+
+// ----- interactions
+document.addEventListener('click', (ev) => {
+  const t = ev.target.closest('button'); if (!t) return;
+  if (t.dataset.sport) { state.sport = t.dataset.sport; state.league = ''; renderRail(); renderFilters(); renderEvents(); }
+  else if (t.dataset.l !== undefined && t.classList.contains('chip')) { state.league = t.dataset.l; renderFilters(); renderEvents(); }
+  else if (t.closest('#seg')) { state.filter = t.dataset.f; document.querySelectorAll('#seg button').forEach(b => b.classList.toggle('active', b === t)); renderEvents(); }
+  else if (t.classList.contains('event')) { state.event = +t.dataset.id; state.stream = 0; renderEvents(); renderStage(); }
+  else if (t.classList.contains('source')) { if (STREAMS[+t.dataset.i].state === 'dead') return; state.stream = +t.dataset.i; renderStage(); }
+  else if (t.classList.contains('tab')) {
+    state.tab = t.dataset.tab; document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === t));
+    $('#eventsPane').style.display = state.tab === 'events' ? 'flex' : 'none';
+    $('#sitesPane').style.display = state.tab === 'sites' ? 'flex' : 'none';
+  }
+  else if (t.dataset.s) { const s = siteById(t.dataset.s); s.on = !s.on; renderAll(); }
+  else if (t.id === 'play') {
+    state.playing = !state.playing;
+    $('#playIcon').innerHTML = state.playing ? '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>' : '<path d="M8 5v14l11-7z"/>';
+  }
+  else if (t.id === 'theme') { const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'light' ? 'dark' : 'light'; }
+});
+$('#q').addEventListener('input', (e) => { state.q = e.target.value; renderEvents(); });
+$('#clock').textContent = new Date().toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+renderAll();
+</script>
+</body>
+</html>
