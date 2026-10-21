@@ -4,6 +4,8 @@ import { Programme } from './programme.jsx';
 import { Poster } from './poster.jsx';
 import { Ceefax } from './ceefax.jsx';
 import { Plain } from './plain.jsx';
+import { KitRoom } from './kitroom.jsx';
+import { Territory } from './territory.jsx';
 import { FINISHED, LIVE, PRE, surname, numOf, kindOf, flagsOf, layoutTeam } from '../matchData.js';
 
 // Match centre ideas: less text and rules, more picture. The lineup is a pitch map, the timeline is
@@ -481,5 +483,7 @@ export default {
     { id: 'D', name: 'Matchday poster', note: 'Neo-brutalist: electric blue, flat team-colour blocks, thick outlines and hard shadows. A minute grid, one portrait pitch with square tiles, and versus cards. Colours come from each team.', Component: Poster },
     { id: 'E', name: 'Ceefax', note: 'A teletext page: 40 columns, the real eight colours, mosaic-block bars, a pitch drawn in characters. The coloured fastext buttons at the bottom are the tabs.', Component: Ceefax },
     { id: 'F', name: 'Plain', note: 'The sensible football app. Light, system type, one green accent, no boxes. Teams are a small shirt-colour square; the stat bars highlight whoever leads instead.', Component: Plain },
+    { id: 'G', name: 'Kit room', note: 'Told with shirts. The score is printed on the back of each club’s shirt, the XI are shirts on the pitch, subs are shirts on the bench, and the stats are a tug of war in club colours.', Component: KitRoom },
+    { id: 'H', name: 'Territory', note: 'The stats are drawn on a pitch: possession is who owns the grass, shots are balls piled in the goal they were aimed at (hollow = off target), corners are flags, cards sit underneath.', Component: Territory },
   ],
 };
