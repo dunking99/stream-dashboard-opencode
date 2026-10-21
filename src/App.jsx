@@ -107,7 +107,7 @@ function App() {
   const dot = backendError ? 'bg-live' : data ? 'bg-mint' : 'bg-amber';
 
   return (
-    <div className="flex min-h-screen flex-col xl:h-screen xl:overflow-hidden">
+    <div className="flex min-h-screen flex-col">
       <header className="flex h-14 shrink-0 items-center gap-4 border-b border-line bg-ink-950/80 px-4 backdrop-blur lg:px-5">
         <div className="flex items-center gap-2.5">
           <span className="flex h-7 w-7 items-center justify-center rounded-md bg-accent text-ink-950" aria-hidden="true">
@@ -147,7 +147,7 @@ function App() {
         </div>
       )}
 
-      <main className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px] xl:grid-rows-[auto_minmax(0,1fr)]">
+      <main className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px]">
         <section className="order-1 min-h-0 space-y-4 p-4 lg:p-5 xl:order-none xl:col-start-1 xl:row-start-1 xl:max-w-[calc(68vh*16/9+2.5rem)]">
           <div className="relative aspect-video w-full max-w-[calc(68vh*16/9)] overflow-hidden rounded-xl border border-line bg-black shadow-2xl shadow-black/30">
             {!data ? (
@@ -204,7 +204,7 @@ function App() {
           )}
         </section>
 
-        <aside className="order-2 flex min-h-0 flex-col border-t border-line xl:order-none xl:col-start-2 xl:row-span-2 xl:row-start-1 xl:border-l xl:border-t-0">
+        <aside className="order-2 flex min-h-0 flex-col border-t border-line xl:order-none xl:col-start-2 xl:row-span-2 xl:row-start-1 xl:h-screen xl:self-start xl:sticky xl:top-0 xl:border-l xl:border-t-0">
           <div className={panel === 'events' ? 'flex min-h-0 flex-1 flex-col' : 'hidden'}>
             <MatchedEvents
               onPlay={handleSitePlay}
@@ -233,7 +233,7 @@ function App() {
         </aside>
 
         {data && !data.error && (
-          <section className="order-4 min-h-0 border-t border-line p-4 lg:p-5 xl:order-none xl:col-start-1 xl:row-start-2 xl:max-w-[calc(68vh*16/9+2.5rem)] xl:overflow-y-auto xl:border-t-0 xl:pt-0">
+          <section className="order-4 min-h-0 border-t border-line p-4 lg:p-5 xl:order-none xl:col-start-1 xl:row-start-2 xl:max-w-[calc(68vh*16/9+2.5rem)] xl:border-t-0 xl:pt-0">
             <MatchCentre key={`${data.espnId}:${data.espnPath}`} espnId={data.espnId} espnPath={data.espnPath} />
           </section>
         )}
