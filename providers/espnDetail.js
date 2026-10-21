@@ -100,6 +100,7 @@ function timelineOf(j, homeId, awayId) {
             side: teamId && teamId === homeId ? 'home' : teamId && teamId === awayId ? 'away' : null,
             team: e.team?.displayName || null,
             player: e.participants?.[0]?.athlete?.displayName || null,
+            participants: (e.participants || []).map((x) => x.athlete?.displayName).filter(Boolean), // scorer first, then assist
             scoring: !!e.scoringPlay,
             wallclock: e.wallclock || null,
         };

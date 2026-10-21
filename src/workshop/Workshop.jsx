@@ -1,321 +1,215 @@
-import { Crest, Chevron } from '../components/EventCard';
+import { useEffect, useState } from 'react';
+import { GROUPS } from './registry';
 
-// Design workshop: a blank page for trying out ideas before they go into the real dashboard.
-// Open it at /workshop.html. Nothing here touches the live app; each idea is one component below,
-// shown on the same match in the three states a time has to cope with.
+// Design lab: where new component designs are tried and refined before they go into the real
+// dashboard. Open it at /workshop.html. Nothing here touches the live app.
+// Add a component in registry.js; the sidebar, width switcher, compare/focus views and shortlist
+// all work on whatever the registry lists.
 
-const MATCH = {
-  home: { name: 'Nottingham Forest', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/393.png' },
-  away: { name: 'Arsenal', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/359.png' },
-  sites: [{ name: 'ppv', play: false }, { name: 'Roxie', play: true }, { name: 'streamed', play: true }, { name: 'timst', play: true }],
-};
-
-// two long names, to check a row still fits
-const LONG = {
-  ...MATCH,
-  home: { name: 'Brighton & Hove Albion', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/331.png' },
-  away: { name: 'Wolverhampton Wanderers', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/380.png' },
-};
-
-// names of one line each, and one line against two
-const SHORT = {
-  ...MATCH,
-  home: { name: 'Arsenal', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/359.png' },
-  away: { name: 'Chelsea', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/363.png' },
-};
-
-// fixed example times so the page looks the same every time you open it
-const STATES = [
-  { key: 'live', label: 'Live now', day: 'Today', time: '16:30', since: 'Started 16:30' },
-  { key: 'soon', label: 'Starting soon', day: 'Today', time: '16:30', mins: 47 },
-  { key: 'later', label: 'Later', day: 'Tomorrow', time: '20:00' },
+const WIDTHS = [
+  { id: 'phone', label: 'Narrow', px: 300 },
+  { id: 'panel', label: 'Panel', px: 380 },
+  { id: 'wide', label: 'Wide', px: 560 },
+  { id: 'centre', label: 'Centre', px: 900 },
+  { id: 'fill', label: 'Fill', px: null },
 ];
 
-const Pills = ({ className = '' }) => (
-  <div className={`flex flex-wrap gap-1 ${className}`}>
-    {MATCH.sites.map((s) => (
-      <span key={s.name} className={`px-1.5 py-0.5 rounded text-[10px] leading-none ${s.play ? 'bg-blue-500/15 text-blue-300' : 'bg-gray-700/60 text-gray-400'}`}>{s.name}</span>
+// remembered between visits; the lab still works with storage blocked
+const load = (key, fallback) => {
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+};
+const save = (key, value) => {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage blocked */ }
+};
+
+const Segmented = ({ options, value, onChange, label }) => (
+  <div role="group" aria-label={label} className="inline-flex rounded-lg border border-line bg-ink-900 p-0.5">
+    {options.map((o) => (
+      <button
+        key={o.id}
+        type="button"
+        onClick={() => onChange(o.id)}
+        aria-pressed={value === o.id}
+        className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${value === o.id ? 'bg-accent text-ink-950' : 'text-muted hover:text-gray-100'}`}
+      >
+        {o.label}
+      </button>
     ))}
   </div>
 );
 
-const LiveDot = () => <span className="h-2 w-2 rounded-full bg-red-500 motion-safe:animate-pulse" aria-hidden="true" />;
+const Star = ({ on, onClick, name }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-pressed={on}
+    aria-label={`${on ? 'Remove' : 'Add'} ${name} ${on ? 'from' : 'to'} shortlist`}
+    className={`rounded-md p-1.5 transition ${on ? 'text-amber' : 'text-muted/60 hover:text-gray-200'}`}
+  >
+    <svg viewBox="0 0 20 20" width="18" height="18" fill={on ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" aria-hidden="true">
+      <path d="m10 2.8 2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 8.1l5-.7L10 2.8Z" />
+    </svg>
+  </button>
+);
 
-// ---------------------------------------------------------------------------------------------
-// A. Quiet column: no coloured block. Teams own the card; the time is a plain right-hand column,
-//    big clock time over a small line of context. Colour appears only as a single word / dot.
-function DesignA({ s }) {
+// one variant: header (id, name, note, star) + every scenario in a frame of the chosen width
+function Variant({ group, variant, width, starred, onStar }) {
+  const { Component } = variant;
+  const px = WIDTHS.find((w) => w.id === width)?.px;
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-gray-700 bg-gray-800 px-4 py-3.5 hover:border-blue-500">
-      <div className="flex-1 min-w-0 flex flex-col gap-2">
-        {[MATCH.home, MATCH.away].map((t) => (
-          <div key={t.name} className="flex items-center gap-3 min-w-0">
-            <Crest src={t.logo} name={t.name} size={26} />
-            <span className="truncate text-[15px] font-semibold text-gray-100">{t.name}</span>
+    <section className="min-w-0">
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent text-sm font-bold text-ink-950">{variant.id}</span>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base font-semibold text-gray-100">{variant.name}</h3>
+          <p className="mt-0.5 text-sm text-muted">{variant.note}</p>
+        </div>
+        <Star on={starred} onClick={onStar} name={variant.name} />
+      </div>
+      <div className="mt-4 space-y-5" style={px ? { maxWidth: px } : undefined}>
+        {group.scenarios.map((sc) => (
+          <div key={sc.label}>
+            <div className="label mb-1.5 normal-case tracking-normal">{sc.label}</div>
+            <Component {...sc.props} />
           </div>
         ))}
-        <Pills className="mt-0.5" />
       </div>
-      <div className="shrink-0 text-right">
-        {s.key === 'live' ? (
-          <>
-            <div className="flex items-center justify-end gap-1.5 text-sm font-semibold text-red-400"><LiveDot />Live</div>
-            <div className="mt-1 text-xs text-gray-500">{s.since}</div>
-          </>
-        ) : (
-          <>
-            <div className="text-2xl font-semibold tabular-nums leading-none text-white">{s.time}</div>
-            <div className={`mt-1.5 text-xs ${s.key === 'soon' ? 'text-amber-400 font-semibold' : 'text-gray-500'}`}>
-              {s.key === 'soon' ? `in ${s.mins} min` : s.day}
-            </div>
-          </>
-        )}
-      </div>
-      <Chevron className="text-gray-500 shrink-0" />
-    </div>
+    </section>
   );
 }
-
-// ---------------------------------------------------------------------------------------------
-// B. Fixture centre: the football-app layout. The two sides face each other, the kickoff sits
-//    between them like a scoreline, so you read "who - when - who" in one glance.
-function DesignB({ s }) {
-  return (
-    <div className="rounded-xl border border-gray-700 bg-gray-800 px-4 py-4 hover:border-blue-500">
-      <div className="grid items-center gap-3" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
-        <div className="flex flex-col items-center gap-2 text-center min-w-0">
-          <Crest src={MATCH.home.logo} name={MATCH.home.name} size={44} />
-          <span className="text-sm font-semibold text-gray-100 leading-tight">{MATCH.home.name}</span>
-        </div>
-        <div className="flex flex-col items-center gap-1" style={{ minWidth: 84 }}>
-          {s.key === 'live' ? (
-            <>
-              <span className="flex items-center gap-1.5 rounded-full bg-red-500/15 px-2.5 py-1 text-xs font-bold text-red-400"><LiveDot />LIVE</span>
-              <span className="text-xs text-gray-500">{s.since}</span>
-            </>
-          ) : (
-            <>
-              <span className="text-xs text-gray-400">{s.key === 'soon' ? 'Today' : s.day}</span>
-              <span className="text-3xl font-semibold tabular-nums leading-none text-white">{s.time}</span>
-              <span className={`text-xs ${s.key === 'soon' ? 'text-amber-400 font-semibold' : 'text-transparent select-none'}`}>
-                {s.key === 'soon' ? `in ${s.mins} min` : '·'}
-              </span>
-            </>
-          )}
-        </div>
-        <div className="flex flex-col items-center gap-2 text-center min-w-0">
-          <Crest src={MATCH.away.logo} name={MATCH.away.name} size={44} />
-          <span className="text-sm font-semibold text-gray-100 leading-tight">{MATCH.away.name}</span>
-        </div>
-      </div>
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <Pills />
-        <Chevron className="text-gray-500 shrink-0" />
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------------------------
-// C. Countdown rail: the time lives in a slim header line and a progress rail along the card's
-//    top edge shows how close kickoff is (fills over the last 3 hours; full and green when live).
-function DesignC({ s }) {
-  const fill = s.key === 'live' ? 100 : s.key === 'soon' ? Math.round(((180 - s.mins) / 180) * 100) : 0;
-  return (
-    <div className="overflow-hidden rounded-xl border border-gray-700 bg-gray-800 hover:border-blue-500">
-      <div className="h-1 bg-gray-700/60" role="progressbar" aria-valuenow={fill} aria-valuemin={0} aria-valuemax={100} aria-label="Time until kickoff">
-        <div className={`h-full ${s.key === 'live' ? 'bg-red-500' : 'bg-amber-400'}`} style={{ width: `${fill}%` }} />
-      </div>
-      <div className="flex items-center justify-between gap-3 px-4 pt-2.5 text-xs">
-        <span className="flex items-center gap-2 font-semibold tabular-nums text-gray-300">
-          {s.key === 'live' && <LiveDot />}
-          {s.day} <span className="text-gray-500">·</span> <span className="text-white text-sm">{s.time}</span>
-        </span>
-        <span className={s.key === 'live' ? 'font-bold text-red-400' : s.key === 'soon' ? 'font-semibold text-amber-400' : 'text-gray-500'}>
-          {s.key === 'live' ? 'LIVE' : s.key === 'soon' ? `Kicks off in ${s.mins} min` : 'Upcoming'}
-        </span>
-      </div>
-      <div className="flex items-center gap-3 px-4 pb-3.5 pt-2.5">
-        <div className="flex-1 min-w-0 flex flex-col gap-2">
-          {[MATCH.home, MATCH.away].map((t) => (
-            <div key={t.name} className="flex items-center gap-3 min-w-0">
-              <Crest src={t.logo} name={t.name} size={26} />
-              <span className="truncate text-[15px] font-semibold text-gray-100">{t.name}</span>
-            </div>
-          ))}
-          <Pills className="mt-0.5" />
-        </div>
-        <Chevron className="text-gray-500 shrink-0" />
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------------------------
-// D. Fixture line (your direction): one row, left to right: home crest + name, "vs", away name + crest.
-//    The kickoff sits on its own line underneath, centred: day, big clock time, and the status.
-function DesignD({ s, m = MATCH }) {
-  const fill = s.key === 'live' ? 100 : s.key === 'soon' ? Math.round(((180 - s.mins) / 180) * 100) : 0;
-  return (
-    <div className="overflow-hidden rounded-xl border border-gray-700 bg-gray-800 hover:border-blue-500">
-      <div className="h-1 bg-gray-700/60" role="progressbar" aria-valuenow={fill} aria-valuemin={0} aria-valuemax={100} aria-label="Time until kickoff">
-        <div className={`h-full ${s.key === 'live' ? 'bg-red-500' : 'bg-amber-400'}`} style={{ width: `${fill}%` }} />
-      </div>
-      <div className="px-4 pt-4 pb-4">
-        <div className="grid items-center gap-3" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Crest src={m.home.logo} name={m.home.name} size={34} />
-            <span className="text-sm font-semibold leading-tight text-gray-100 [text-wrap:balance]">{m.home.name}</span>
-          </div>
-          <span className="text-xs font-medium text-gray-500">vs</span>
-          <div className="flex items-center justify-end gap-2.5 min-w-0 text-right">
-            <span className="text-sm font-semibold leading-tight text-gray-100 [text-wrap:balance]">{m.away.name}</span>
-            <Crest src={m.away.logo} name={m.away.name} size={34} />
-          </div>
-        </div>
-
-        <div className="mt-3 flex items-baseline justify-center gap-2.5 border-t border-gray-700/70 pt-3 tabular-nums">
-          {s.key === 'live' ? (
-            <>
-              <span className="flex items-center gap-1.5 self-center text-sm font-bold text-red-400"><LiveDot />LIVE</span>
-              <span className="text-xs text-gray-500">{s.since}</span>
-            </>
-          ) : (
-            <>
-              <span className="text-xs text-gray-400">{s.day}</span>
-              <span className="text-xl font-semibold leading-none text-white">{s.time}</span>
-              {s.key === 'soon' && <span className="text-xs font-semibold text-amber-400">in {s.mins} min</span>}
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------------------------
-// E. Fixture centre + rail: B, copied. No sites row; the countdown rail runs along the top edge
-//    (red when live, amber filling as kickoff nears, an empty track when it's later).
-function DesignE({ s, m = MATCH }) {
-  const fill = s.key === 'live' ? 100 : s.key === 'soon' ? Math.round(((180 - s.mins) / 180) * 100) : 0;
-  return (
-    <div className="overflow-hidden rounded-xl border border-gray-700 bg-gray-800 hover:border-blue-500">
-      <div className="h-1 bg-gray-700/60" role="progressbar" aria-valuenow={fill} aria-valuemin={0} aria-valuemax={100} aria-label="Time until kickoff">
-        <div className={`h-full ${s.key === 'live' ? 'bg-red-500' : 'bg-amber-400'}`} style={{ width: `${fill}%` }} />
-      </div>
-      <div className="px-4 py-4">
-        {/* two rows: crest | kickoff | crest share one centre line; the names hang beneath their crests, each in a fixed two-line slot so a long name can't move anything */}
-        <div className="grid gap-x-3 gap-y-2" style={{ gridTemplateColumns: '1fr auto 1fr', alignItems: 'center' }}>
-          <div className="flex justify-center"><Crest src={m.home.logo} name={m.home.name} size={44} /></div>
-          <div className="flex flex-col items-center justify-center gap-1" style={{ minWidth: 84, height: 72 }}>
-            {s.key === 'live' ? (
-              <>
-                <span className="flex items-center gap-1.5 rounded-full bg-red-500/15 px-2.5 py-1 text-xs font-bold text-red-400"><LiveDot />LIVE</span>
-                <span className="text-xs text-gray-500">{s.since}</span>
-              </>
-            ) : (
-              <>
-                <span className="text-xs text-gray-400">{s.day}</span>
-                <span className="text-3xl font-semibold tabular-nums leading-none text-white">{s.time}</span>
-                {s.key === 'soon' && <span className="text-xs font-semibold text-amber-400">in {s.mins} min</span>}
-              </>
-            )}
-          </div>
-          <div className="flex justify-center"><Crest src={m.away.logo} name={m.away.name} size={44} /></div>
-
-          <span className="text-center text-sm font-semibold leading-tight text-gray-100" style={{ alignSelf: 'start', minHeight: '2.5em' }}>{m.home.name}</span>
-          <span aria-hidden="true" />
-          <span className="text-center text-sm font-semibold leading-tight text-gray-100" style={{ alignSelf: 'start', minHeight: '2.5em' }}>{m.away.name}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------------------------
-// F. Quiet column + rail: A, copied. No sites row; the countdown rail runs along the top edge;
-//    bigger crests and names.
-function DesignF({ s, m = MATCH }) {
-  const fill = s.key === 'live' ? 100 : s.key === 'soon' ? Math.round(((180 - s.mins) / 180) * 100) : 0;
-  return (
-    <div className="overflow-hidden rounded-xl border border-gray-700 bg-gray-800 hover:border-blue-500">
-      <div className="h-1 bg-gray-700/60" role="progressbar" aria-valuenow={fill} aria-valuemin={0} aria-valuemax={100} aria-label="Time until kickoff">
-        <div className={`h-full ${s.key === 'live' ? 'bg-red-500' : 'bg-amber-400'}`} style={{ width: `${fill}%` }} />
-      </div>
-      <div className="flex items-center gap-4 px-4 py-4">
-        <div className="flex-1 min-w-0 flex flex-col gap-3">
-          {[m.home, m.away].map((t) => (
-            <div key={t.name} className="flex items-center gap-3.5 min-w-0">
-              <Crest src={t.logo} name={t.name} size={36} />
-              <span className="text-lg font-semibold leading-tight text-gray-100" data-name style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{t.name}</span>
-            </div>
-          ))}
-        </div>
-        <div className="shrink-0 text-right" data-time>
-          {s.key === 'live' ? (
-            <>
-              <div className="flex items-center justify-end gap-1.5 text-base font-semibold text-red-400"><LiveDot />Live</div>
-              <div className="mt-1 text-xs text-gray-500">{s.since}</div>
-            </>
-          ) : (
-            <>
-              <div className="text-2xl font-semibold tabular-nums leading-none text-white">{s.time}</div>
-              <div className={`mt-1.5 text-xs ${s.key === 'soon' ? 'text-amber-400 font-semibold' : 'text-gray-500'}`}>
-                {s.key === 'soon' ? `in ${s.mins} min` : s.day}
-              </div>
-            </>
-          )}
-        </div>
-        <Chevron className="text-gray-500 shrink-0" />
-      </div>
-    </div>
-  );
-}
-
-const DESIGNS = [
-  { id: 'F', name: 'Quiet column + rail', note: 'A with the sites row removed, the countdown rail on top, and bigger crests and names.', Card: DesignF, stress: true },
-  { id: 'E', name: 'Fixture centre + rail', note: 'B with the sites row removed and the countdown rail along the top edge. Crests and the kickoff share one centre line; names hang beneath the crests.', Card: DesignE, stress: true },
-  { id: 'D', name: 'Fixture line', note: 'Your direction: Team 1 vs Team 2 on one row, kickoff on its own line underneath, countdown rail on top.', Card: DesignD, stress: true },
-  { id: 'A', name: 'Quiet column', note: 'No coloured block. Teams lead; the time is a plain column on the right.', Card: DesignA },
-  { id: 'B', name: 'Fixture centre', note: 'Sides face each other with the kickoff between them, like a football app.', Card: DesignB },
-  { id: 'C', name: 'Countdown rail', note: 'Time in a slim header line, plus a rail that fills as kickoff gets closer.', Card: DesignC },
-];
 
 export default function Workshop() {
-  return (
-    <div className="min-h-screen bg-gray-900 p-6 text-white">
-      <header className="mb-8 border-b border-gray-700 pb-4">
-        <h1 className="text-2xl font-bold text-blue-500">Design workshop</h1>
-        <p className="mt-1 text-sm text-gray-400">
-          Event row ideas, same match (Nottingham Forest vs Arsenal) in three states. Times are fixed examples.
-        </p>
-      </header>
+  const [groupId, setGroupId] = useState(() => (window.location.hash.slice(1) || GROUPS[0].id));
+  const [widths, setWidths] = useState(() => load('lab.widths', {})); // { groupId: widthId }
+  const [view, setView] = useState(() => load('lab.view', 'compare'));
+  const [starred, setStarred] = useState(() => load('lab.starred', {})); // { "event-row:E": true }
+  const [onlyStarred, setOnlyStarred] = useState(false);
+  const [focusId, setFocusId] = useState(null);
 
-      <div className="grid gap-10 md:grid-cols-2 2xl:grid-cols-4">
-        {DESIGNS.map(({ id, name, note, Card, stress }) => (
-          <section key={id} className="min-w-0" style={{ maxWidth: 460 }}>
-            <h2 className="text-lg font-semibold">
-              <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-600 text-sm">{id}</span>
-              {name}
-            </h2>
-            <p className="mb-4 mt-1 text-sm text-gray-400">{note}</p>
-            <div className="space-y-5">
-              {STATES.map((s) => (
-                <div key={s.key}>
-                  <div className="mb-1.5 text-xs text-gray-500">{s.label}</div>
-                  <Card s={s} />
-                </div>
-              ))}
-              {stress && [['Short names (1 line each)', SHORT], ['Long names (2 lines each)', LONG]].map(([label, m]) => (
-                <div key={label}>
-                  <div className="mb-1.5 text-xs text-gray-500">{label}</div>
-                  <Card s={STATES[1]} m={m} />
-                </div>
+  const group = GROUPS.find((g) => g.id === groupId) || GROUPS[0];
+  const width = widths[group.id] || group.defaultWidth || 'panel';
+  const setWidth = (w) => setWidths((all) => ({ ...all, [group.id]: w }));
+  const key = (v) => `${group.id}:${v.id}`;
+
+  useEffect(() => {
+    const onHash = () => { setGroupId(window.location.hash.slice(1) || GROUPS[0].id); setFocusId(null); };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  useEffect(() => save('lab.widths', widths), [widths]);
+  useEffect(() => save('lab.view', view), [view]);
+  useEffect(() => save('lab.starred', starred), [starred]);
+
+  const toggleStar = (v) => setStarred((s) => {
+    const next = { ...s };
+    if (next[key(v)]) delete next[key(v)]; else next[key(v)] = true;
+    return next;
+  });
+  const starCount = (g) => g.variants.filter((v) => starred[`${g.id}:${v.id}`]).length;
+
+  // a whole-page design takes the entire window; a small tab leads back to the lab
+  if (group.fullPage) {
+    const Page = group.Page;
+    return (
+      <>
+        <Page />
+        <a href={`#${GROUPS[0].id}`} className="fixed bottom-3 left-[150px] z-[100] rounded-md border border-white/20 bg-black/80 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur hover:bg-black">← Design lab</a>
+      </>
+    );
+  }
+
+  let shown = onlyStarred ? group.variants.filter((v) => starred[key(v)]) : group.variants;
+  if (view === 'focus') {
+    const pick = shown.find((v) => v.id === focusId) || shown[0];
+    shown = pick ? [pick] : [];
+  }
+
+  return (
+    <div className="flex min-h-screen bg-ink-950 text-gray-100">
+      <nav className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-line bg-ink-900 md:flex" aria-label="Components">
+        <div className="border-b border-line px-5 py-4">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">Stream Dashboard</div>
+          <h1 className="mt-0.5 text-lg font-semibold">Design lab</h1>
+        </div>
+        <ul className="flex-1 space-y-0.5 overflow-y-auto p-2">
+          {GROUPS.map((g) => (
+            <li key={g.id}>
+              <a
+                href={`#${g.id}`}
+                aria-current={g.id === group.id ? 'page' : undefined}
+                className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm transition ${g.id === group.id ? 'bg-accent/15 font-semibold text-accent' : 'text-gray-300 hover:bg-ink-850'}`}
+              >
+                <span className="truncate">{g.title}</span>
+                <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-muted">
+                  {starCount(g) > 0 && <span className="text-amber">★ {starCount(g)}</span>}
+                  {g.variants.length}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <p className="border-t border-line px-5 py-3 text-[11px] leading-relaxed text-muted">
+          New components go in <code className="text-gray-300">registry.js</code>. Star the ones you like; stars are remembered in this browser.
+        </p>
+      </nav>
+
+      <main className="min-w-0 flex-1">
+        <header className="sticky top-0 z-10 border-b border-line bg-ink-950/90 px-6 py-3 backdrop-blur">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="mr-auto min-w-0">
+              <h2 className="text-lg font-semibold">{group.title}</h2>
+              <p className="text-xs text-muted">{group.blurb} Fixed example data, so it looks the same every time.</p>
+            </div>
+            <select
+              aria-label="Component"
+              value={group.id}
+              onChange={(e) => { window.location.hash = e.target.value; }}
+              className="field w-auto md:hidden"
+            >
+              {GROUPS.map((g) => <option key={g.id} value={g.id}>{g.title}</option>)}
+            </select>
+            <Segmented label="Width" value={width} onChange={setWidth} options={WIDTHS} />
+            <Segmented label="View" value={view} onChange={setView} options={[{ id: 'compare', label: 'Compare' }, { id: 'focus', label: 'Focus' }]} />
+            <label className="flex items-center gap-2 text-xs text-muted">
+              <input type="checkbox" checked={onlyStarred} onChange={(e) => setOnlyStarred(e.target.checked)} className="accent-[#4fa3ff]" />
+              Shortlist only
+            </label>
+          </div>
+          {view === 'focus' && group.variants.length > 1 && (
+            <div className="mt-3 flex flex-wrap gap-1.5" role="tablist" aria-label="Variants">
+              {group.variants.map((v) => {
+                const active = (focusId || shown[0]?.id) === v.id;
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setFocusId(v.id)}
+                    className={`rounded-md border px-2.5 py-1 text-xs font-semibold ${active ? 'border-accent bg-accent/15 text-accent' : 'border-line text-muted hover:text-gray-100'}`}
+                  >
+                    {v.id} · {v.name}{starred[key(v)] ? ' ★' : ''}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </header>
+
+        <div className="p-6">
+          {shown.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-line px-6 py-12 text-center text-sm text-muted">
+              Nothing starred in {group.title} yet. Star a variant with the ★ button, or untick “Shortlist only”.
+            </p>
+          ) : (
+            <div className={view === 'compare' ? 'grid gap-x-10 gap-y-12' : ''} style={view === 'compare' ? { gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${(WIDTHS.find((w) => w.id === width)?.px ?? 460) + 20}px), 1fr))` } : undefined}>
+              {shown.map((v) => (
+                <Variant key={v.id} group={group} variant={v} width={width} starred={Boolean(starred[key(v)])} onStar={() => toggleStar(v)} />
               ))}
             </div>
-          </section>
-        ))}
-      </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }

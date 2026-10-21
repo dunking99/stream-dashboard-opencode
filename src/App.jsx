@@ -5,6 +5,8 @@ import MatchedEvents from './components/MatchedEvents';
 import MatchClock from './components/MatchClock';
 import VideoPlayer from './components/VideoPlayer';
 import MatchCentre from './components/MatchCentre';
+import LiveLineup from './components/LiveLineup';
+import ChannelStrip from './components/ChannelStrip';
 import SourcePanel from './components/SourcePanel';
 import SitesDrawer from './components/SitesDrawer';
 import './App.css';
@@ -15,6 +17,21 @@ function App() {
   const [switching, setSwitching] = useState(false);
   const [sitesOpen, setSitesOpen] = useState(false);
   const [toast, setToast] = useState(null);
+  const [panel, setPanel] = useState('events');
+  const wrapRef = useRef(null);
+  const [room, setRoom] = useState(0); // free width beside the video, for the timeline
+  useEffect(() => {
+    const measure = () => {
+      const el = wrapRef.current;
+      if (!el) return;
+      setRoom(Math.floor(el.clientWidth - (0.68 * window.innerHeight * 16) / 9 - 40 - 16));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (wrapRef.current) ro.observe(wrapRef.current);
+    window.addEventListener('resize', measure);
+    return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
+  }, []);
   const [recheck, setRecheck] = useState(0);
   const [scanned, setScanned] = useState(false);
   const videoRef = useRef(null);
@@ -105,7 +122,7 @@ function App() {
   const dot = backendError ? 'bg-live' : data ? 'bg-mint' : 'bg-amber';
 
   return (
-    <div className="flex min-h-screen flex-col xl:h-screen xl:overflow-hidden">
+    <div className="flex min-h-screen flex-col">
       <header className="flex h-14 shrink-0 items-center gap-4 border-b border-line bg-ink-950/80 px-4 backdrop-blur lg:px-5">
         <div className="flex items-center gap-2.5">
           <span className="flex h-7 w-7 items-center justify-center rounded-md bg-accent text-ink-950" aria-hidden="true">
@@ -145,17 +162,10 @@ function App() {
         </div>
       )}
 
-      <main className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[300px_minmax(0,1fr)_340px] xl:grid-rows-[auto_minmax(0,1fr)]">
-        <aside className="order-2 min-h-0 border-t border-line xl:order-none xl:row-span-2 xl:border-t-0 xl:border-r">
-          <MatchedEvents
-            onPlay={handleSitePlay}
-            onRecheck={handleRecheck}
-            playing={data ? { eventPath: data.eventPath, clocks, best } : null}
-          />
-        </aside>
-
-        <section className="order-1 min-h-0 space-y-4 p-4 lg:p-5 xl:order-none xl:col-start-2 xl:row-start-1">
-          <div className="relative aspect-video max-h-[56vh] w-full overflow-hidden rounded-xl border border-line bg-black shadow-2xl shadow-black/30">
+      <main className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <div ref={wrapRef} className="order-1 flex min-w-0 xl:order-none xl:col-start-1 xl:row-start-1">
+        <section className="min-h-0 w-full shrink-0 space-y-4 p-4 lg:p-5 xl:max-w-[calc(68vh*16/9+2.5rem)]">
+          <div className="relative aspect-video w-full max-w-[calc(68vh*16/9)] overflow-hidden rounded-xl border border-line bg-black shadow-2xl shadow-black/30">
             {!data ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
                 <span className={`h-8 w-8 rounded-full border-2 border-line border-t-accent ${backendError ? '' : 'motion-safe:animate-spin'}`} aria-hidden="true" />
@@ -201,25 +211,51 @@ function App() {
             )}
           </div>
 
+          {data && !data.error && streams.length > 0 && (
+            <ChannelStrip key={data.eventPath} streams={streams} activeIndex={data.activeIndex} clocks={clocks} best={best} scanned={scanned} onSwitch={handleSwitchStream} switching={switching} />
+          )}
+
           {data && !data.error && (
             <MatchClock key={playerKey} videoRef={videoRef} auto={auto} home={home} away={away} />
           )}
         </section>
+        {data && !data.error && room >= 300 && (
+          <div className="relative hidden min-w-0 flex-1 py-4 pr-4 xl:block lg:py-5 lg:pr-5">
+            <div className="absolute inset-y-4 left-0 right-4 lg:inset-y-5 lg:right-5"><LiveLineup key={`${data.espnId}:${data.espnPath}`} espnId={data.espnId} espnPath={data.espnPath} /></div>
+          </div>
+        )}
+        </div>
 
-        <aside className="order-3 min-h-0 border-t border-line p-4 lg:p-5 xl:order-none xl:row-span-2 xl:overflow-y-auto xl:border-t-0 xl:border-l">
-          <SourcePanel
-            data={data}
-            clocks={clocks}
-            best={best}
-            scanned={scanned}
-            onScan={handleRecheck}
-            onSwitch={handleSwitchStream}
-            switching={switching}
-          />
+        <aside className="order-2 flex min-h-0 flex-col border-t border-line xl:order-none xl:col-start-2 xl:row-span-2 xl:row-start-1 xl:h-screen xl:self-start xl:sticky xl:top-0 xl:border-l xl:border-t-0">
+          <div className={panel === 'events' ? 'flex min-h-0 flex-1 flex-col' : 'hidden'}>
+            <MatchedEvents
+              onPlay={handleSitePlay}
+              onRecheck={handleRecheck}
+              onShowSources={() => setPanel('sources')}
+              playing={data ? { eventPath: data.eventPath, clocks, best } : null}
+            />
+          </div>
+          {panel === 'sources' && (
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 lg:p-5">
+              <button type="button" onClick={() => setPanel('events')} className="btn mb-3">
+                <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5l-5 5 5 5" /></svg>
+                Events
+              </button>
+              <SourcePanel
+                data={data}
+                clocks={clocks}
+                best={best}
+                scanned={scanned}
+                onScan={handleRecheck}
+                onSwitch={handleSwitchStream}
+                switching={switching}
+              />
+            </div>
+          )}
         </aside>
 
         {data && !data.error && (
-          <section className="order-4 min-h-0 border-t border-line p-4 lg:p-5 xl:order-none xl:col-start-2 xl:row-start-2 xl:overflow-y-auto xl:border-t-0 xl:pt-0">
+          <section className="order-4 min-h-0 border-t border-line p-4 lg:p-5 xl:order-none xl:col-start-1 xl:row-start-2 xl:max-w-[calc(68vh*16/9+2.5rem)] xl:border-t-0 xl:pt-0">
             <MatchCentre key={`${data.espnId}:${data.espnPath}`} espnId={data.espnId} espnPath={data.espnPath} />
           </section>
         )}
