@@ -10,6 +10,7 @@ const WIDTHS = [
   { id: 'phone', label: 'Narrow', px: 300 },
   { id: 'panel', label: 'Panel', px: 380 },
   { id: 'wide', label: 'Wide', px: 560 },
+  { id: 'centre', label: 'Centre', px: 900 },
   { id: 'fill', label: 'Fill', px: null },
 ];
 
@@ -79,13 +80,15 @@ function Variant({ group, variant, width, starred, onStar }) {
 
 export default function Workshop() {
   const [groupId, setGroupId] = useState(() => (window.location.hash.slice(1) || GROUPS[0].id));
-  const [width, setWidth] = useState(() => load('lab.width', 'panel'));
+  const [widths, setWidths] = useState(() => load('lab.widths', {})); // { groupId: widthId }
   const [view, setView] = useState(() => load('lab.view', 'compare'));
   const [starred, setStarred] = useState(() => load('lab.starred', {})); // { "event-row:E": true }
   const [onlyStarred, setOnlyStarred] = useState(false);
   const [focusId, setFocusId] = useState(null);
 
   const group = GROUPS.find((g) => g.id === groupId) || GROUPS[0];
+  const width = widths[group.id] || group.defaultWidth || 'panel';
+  const setWidth = (w) => setWidths((all) => ({ ...all, [group.id]: w }));
   const key = (v) => `${group.id}:${v.id}`;
 
   useEffect(() => {
@@ -93,7 +96,7 @@ export default function Workshop() {
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
-  useEffect(() => save('lab.width', width), [width]);
+  useEffect(() => save('lab.widths', widths), [widths]);
   useEffect(() => save('lab.view', view), [view]);
   useEffect(() => save('lab.starred', starred), [starred]);
 
@@ -188,7 +191,7 @@ export default function Workshop() {
               Nothing starred in {group.title} yet. Star a variant with the ★ button, or untick “Shortlist only”.
             </p>
           ) : (
-            <div className={view === 'compare' ? 'grid gap-x-10 gap-y-12' : ''} style={view === 'compare' ? { gridTemplateColumns: `repeat(auto-fill, minmax(${Math.min(WIDTHS.find((w) => w.id === width)?.px ?? 460, 560) + 20}px, 1fr))` } : undefined}>
+            <div className={view === 'compare' ? 'grid gap-x-10 gap-y-12' : ''} style={view === 'compare' ? { gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${(WIDTHS.find((w) => w.id === width)?.px ?? 460) + 20}px), 1fr))` } : undefined}>
               {shown.map((v) => (
                 <Variant key={v.id} group={group} variant={v} width={width} starred={Boolean(starred[key(v)])} onStar={() => toggleStar(v)} />
               ))}
