@@ -197,6 +197,19 @@ function App() {
           <div className="hidden pt-2 text-sm text-muted xl:block">
               <p>Test 1247, hello, hello, hello</p>
               <p>183749 yes hello number 4</p>
+              <svg viewBox="0 0 120 76" className="mt-3 w-56 rounded-md border border-line bg-[#0c2a1c]" role="img" aria-label="Test pitch">
+                <g fill="none" stroke="#2f6b4b" strokeWidth="1">
+                  <rect x="4" y="4" width="112" height="68" />
+                  <path d="M60 4v68" />
+                  <circle cx="60" cy="38" r="9" />
+                  <rect x="4" y="22" width="14" height="32" />
+                  <rect x="102" y="22" width="14" height="32" />
+                </g>
+                <circle r="3" fill="#fff">
+                  <animate attributeName="cx" values="20;60;100;60;20" dur="6s" repeatCount="indefinite" />
+                  <animate attributeName="cy" values="38;20;38;56;38" dur="6s" repeatCount="indefinite" />
+                </circle>
+              </svg>
             </div>
           </div>
 
