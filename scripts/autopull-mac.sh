@@ -7,7 +7,7 @@
 # Leave it running in a terminal tab.
 
 BRANCH="${BRANCH:-claude/serene-heisenberg-zk8o4b}"
-FOLDER_ID="${FOLDER_ID:-w2qnw-xrriq}"          # Syncthing folder ID of stream-dashboard-opencode
+FOLDER_ID="${FOLDER_ID:-z4b5t-xuwzr}"          # Syncthing folder ID of stream-dashboard-opencode
 ST_URL="${ST_URL:-http://127.0.0.1:8384}"
 EVERY="${EVERY:-5}"                              # seconds between checks (one tiny request each)
 
