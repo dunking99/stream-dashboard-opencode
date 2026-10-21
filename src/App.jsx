@@ -146,9 +146,9 @@ function App() {
         </div>
       )}
 
-      <main className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] xl:grid-rows-[auto_minmax(0,1fr)]">
+      <main className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] xl:grid-rows-[auto_minmax(0,1fr)] 2xl:grid-cols-[min(calc(100vw-820px),calc((100vh-190px)*16/9))_minmax(0,1fr)_340px]">
         <section className="order-1 min-h-0 space-y-4 p-4 lg:p-5 xl:order-none xl:col-start-1 xl:row-start-1">
-          <div className="relative aspect-video w-full max-w-[calc(56vh*16/9)] overflow-hidden rounded-xl border border-line bg-black shadow-2xl shadow-black/30">
+          <div className="relative aspect-video w-full max-w-[calc(56vh*16/9)] overflow-hidden 2xl:max-w-none rounded-xl border border-line bg-black shadow-2xl shadow-black/30">
             {!data ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
                 <span className={`h-8 w-8 rounded-full border-2 border-line border-t-accent ${backendError ? '' : 'motion-safe:animate-spin'}`} aria-hidden="true" />
@@ -199,7 +199,7 @@ function App() {
           )}
         </section>
 
-        <aside className="order-2 flex min-h-0 flex-col border-t border-line xl:order-none xl:col-start-2 xl:row-span-2 xl:row-start-1 xl:border-l xl:border-t-0">
+        <aside className="order-2 flex min-h-0 flex-col border-t border-line xl:order-none xl:col-start-2 xl:row-span-2 xl:row-start-1 xl:border-l xl:border-t-0 2xl:col-start-3">
           <div className={panel === 'events' ? 'flex min-h-0 flex-1 flex-col' : 'hidden'}>
             <MatchedEvents
               onPlay={handleSitePlay}
@@ -228,7 +228,7 @@ function App() {
         </aside>
 
         {data && !data.error && (
-          <section className="order-4 min-h-0 border-t border-line p-4 lg:p-5 xl:order-none xl:col-start-1 xl:row-start-2 xl:overflow-y-auto xl:border-t-0 xl:pt-0">
+          <section className="order-4 min-h-0 border-t border-line p-4 lg:p-5 xl:order-none xl:col-start-1 xl:row-start-2 xl:overflow-y-auto xl:border-t-0 xl:pt-0 2xl:col-start-2 2xl:row-span-2 2xl:row-start-1 2xl:border-l 2xl:pt-4 2xl:lg:pt-5">
             <MatchCentre key={`${data.espnId}:${data.espnPath}`} espnId={data.espnId} espnPath={data.espnPath} />
           </section>
         )}
