@@ -89,10 +89,15 @@ export default function EventCard({ ev, now, open, isPlaying = false, showLeague
                 <span className={`whitespace-nowrap text-3xl font-semibold leading-none tabular ${w.state === 'ended' ? 'text-muted/50' : 'text-white'}`}>
                   {clock}{ampm && <span className="ml-0.5 text-xs font-medium text-muted">{ampm}</span>}
                 </span>
-                {w.state === 'soon' && <span className="text-xs font-semibold text-amber">{w.label}</span>}
               </>
             )}
-            {isPlaying && <span className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-mint">Playing</span>}
+          </div>
+          {/* extra lines hang below the time without making the card taller */}
+          <div className="relative" style={{ gridColumn: 2, gridRow: 2 }}>
+            <div className="absolute inset-x-0 -top-3 flex flex-col items-center gap-0.5 whitespace-nowrap text-center">
+              {w?.state === 'soon' && <span className="text-xs font-semibold text-amber">{w.label}</span>}
+              {isPlaying && <span className="text-[10px] font-bold uppercase tracking-wider text-mint">Playing</span>}
+            </div>
           </div>
           <div className="flex justify-center" style={{ gridColumn: 3, gridRow: 1 }}><Crest src={sides[1].logo} name={sides[1].name} size={64} /></div>
 
