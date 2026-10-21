@@ -148,6 +148,7 @@ function App() {
 
       <main className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] xl:grid-rows-[auto_minmax(0,1fr)]">
         <section className="order-1 min-h-0 space-y-4 p-4 lg:p-5 xl:order-none xl:col-start-1 xl:row-start-1">
+          <div className="flex items-start gap-4">
           <div className="relative aspect-video w-full max-w-[calc(56vh*16/9)] overflow-hidden rounded-xl border border-line bg-black shadow-2xl shadow-black/30">
             {!data ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
@@ -192,6 +193,8 @@ function App() {
                 </span>
               </div>
             )}
+          </div>
+          <p className="hidden pt-2 text-sm text-muted xl:block">Test 1247, hello, hello, hello</p>
           </div>
 
           {data && !data.error && (
