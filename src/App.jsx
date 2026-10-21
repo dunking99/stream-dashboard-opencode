@@ -5,6 +5,7 @@ import MatchedEvents from './components/MatchedEvents';
 import MatchClock from './components/MatchClock';
 import VideoPlayer from './components/VideoPlayer';
 import MatchCentre from './components/MatchCentre';
+import ChannelStrip from './components/ChannelStrip';
 import SourcePanel from './components/SourcePanel';
 import SitesDrawer from './components/SitesDrawer';
 import './App.css';
@@ -193,6 +194,10 @@ function App() {
               </div>
             )}
           </div>
+
+          {data && !data.error && streams.length > 0 && (
+            <ChannelStrip key={data.eventPath} streams={streams} activeIndex={data.activeIndex} onSwitch={handleSwitchStream} switching={switching} />
+          )}
 
           {data && !data.error && (
             <MatchClock key={playerKey} videoRef={videoRef} auto={auto} home={home} away={away} />
