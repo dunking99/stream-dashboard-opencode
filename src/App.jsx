@@ -147,7 +147,7 @@ function App() {
       )}
 
       <main className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px] xl:grid-rows-[auto_minmax(0,1fr)]">
-        <section className="order-1 min-h-0 space-y-4 p-4 lg:p-5 xl:order-none xl:col-start-1 xl:row-start-1">
+        <section className="order-1 min-h-0 space-y-4 p-4 lg:p-5 xl:order-none xl:col-start-1 xl:row-start-1 xl:max-w-[calc(68vh*16/9+2.5rem)]">
           <div className="relative aspect-video w-full max-w-[calc(68vh*16/9)] overflow-hidden rounded-xl border border-line bg-black shadow-2xl shadow-black/30">
             {!data ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
@@ -228,7 +228,7 @@ function App() {
         </aside>
 
         {data && !data.error && (
-          <section className="order-4 min-h-0 border-t border-line p-4 lg:p-5 xl:order-none xl:col-start-1 xl:row-start-2 xl:overflow-y-auto xl:border-t-0 xl:pt-0">
+          <section className="order-4 min-h-0 border-t border-line p-4 lg:p-5 xl:order-none xl:col-start-1 xl:row-start-2 xl:max-w-[calc(68vh*16/9+2.5rem)] xl:overflow-y-auto xl:border-t-0 xl:pt-0">
             <MatchCentre key={`${data.espnId}:${data.espnPath}`} espnId={data.espnId} espnPath={data.espnPath} />
           </section>
         )}
