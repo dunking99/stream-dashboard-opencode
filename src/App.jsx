@@ -196,7 +196,7 @@ function App() {
           </div>
 
           {data && !data.error && streams.length > 0 && (
-            <ChannelStrip key={data.eventPath} streams={streams} activeIndex={data.activeIndex} onSwitch={handleSwitchStream} switching={switching} />
+            <ChannelStrip key={data.eventPath} streams={streams} activeIndex={data.activeIndex} clocks={clocks} best={best} scanned={scanned} onSwitch={handleSwitchStream} switching={switching} />
           )}
 
           {data && !data.error && (
