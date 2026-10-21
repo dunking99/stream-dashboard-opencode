@@ -146,9 +146,9 @@ function App() {
         </div>
       )}
 
-      <main className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] xl:grid-rows-[auto_minmax(0,1fr)]">
+      <main className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px] xl:grid-rows-[auto_minmax(0,1fr)]">
         <section className="order-1 min-h-0 space-y-4 p-4 lg:p-5 xl:order-none xl:col-start-1 xl:row-start-1">
-          <div className="relative aspect-video w-full max-w-[calc(56vh*16/9)] overflow-hidden rounded-xl border border-line bg-black shadow-2xl shadow-black/30">
+          <div className="relative aspect-video w-full max-w-[calc(68vh*16/9)] overflow-hidden rounded-xl border border-line bg-black shadow-2xl shadow-black/30">
             {!data ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
                 <span className={`h-8 w-8 rounded-full border-2 border-line border-t-accent ${backendError ? '' : 'motion-safe:animate-spin'}`} aria-hidden="true" />
