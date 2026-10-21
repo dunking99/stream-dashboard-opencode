@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Crest } from '../../components/EventCard';
 import { Programme } from './programme.jsx';
 import { Poster } from './poster.jsx';
+import { Ceefax } from './ceefax.jsx';
+import { Plain } from './plain.jsx';
 import { FINISHED, LIVE, PRE, surname, numOf, kindOf, flagsOf, layoutTeam } from '../matchData.js';
 
 // Match centre ideas: less text and rules, more picture. The lineup is a pitch map, the timeline is
@@ -477,5 +479,7 @@ export default {
     { id: 'B', name: 'Visual tabs', note: 'Keeps today’s tab bar so it’s a small step to port, but each tab leads with a picture: flow strip, pitch map, stat bars.', Component: VisualTabs },
     { id: 'C', name: 'Matchday programme', note: 'Editorial: a printed programme. Warm paper, black and vermilion two-ink printing, a written headline, a running-order spine, one tactics sheet per team and isotype strips for the stats.', Component: Programme },
     { id: 'D', name: 'Matchday poster', note: 'Neo-brutalist: electric blue, flat team-colour blocks, thick outlines and hard shadows. A minute grid, one portrait pitch with square tiles, and versus cards. Colours come from each team.', Component: Poster },
+    { id: 'E', name: 'Ceefax', note: 'A teletext page: 40 columns, the real eight colours, mosaic-block bars, a pitch drawn in characters. The coloured fastext buttons at the bottom are the tabs.', Component: Ceefax },
+    { id: 'F', name: 'Plain', note: 'The sensible football app. Light, system type, one green accent, no boxes. Teams are a small shirt-colour square; the stat bars highlight whoever leads instead.', Component: Plain },
   ],
 };

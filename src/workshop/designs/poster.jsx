@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { surname, numOf, kindOf, flagsOf, layoutTeam } from '../matchData.js';
+import { surname, numOf, kindOf, flagsOf, layoutTeam, onColor } from '../matchData.js';
 
 // D. Matchday poster: neo-brutalist. Electric-blue field, flat team-colour blocks (taken from the
 // teams' own colours), thick black outlines, hard offset shadows, chunky type. Loud on purpose.
@@ -12,12 +12,6 @@ const head = { fontFamily: "'Archivo Black', 'Arial Black', Impact, sans-serif" 
 const mono = { fontFamily: "'Space Mono', ui-monospace, Menlo, monospace" };
 const BOX = 'border-[3px] border-black shadow-[5px_5px_0_#000]';
 
-// readable text on a team colour
-const onColor = (hex) => {
-  const n = parseInt(hex.slice(1), 16);
-  const lum = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
-  return lum > 0.45 ? BLACK : '#fff';
-};
 const colorOf = (d, side) => d[side].color || (side === 'home' ? '#ffd400' : '#00c2a8');
 
 // a label stuck on the corner of a card
