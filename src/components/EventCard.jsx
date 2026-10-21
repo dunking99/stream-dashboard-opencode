@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { PLAYABLE, SITE_NAME, SITE_SHORT, sortSites } from '../siteMeta';
 import { whenOf } from '../eventTime';
 
 export function Crest({ src, name, size = 24, round = false }) {
@@ -54,7 +53,7 @@ export default function EventCard({ ev, now, open, isPlaying = false, showLeague
   const edge = isPlaying ? 'bg-accent' : isLive ? 'bg-live/70' : 'bg-transparent';
 
   return (
-    <div className={`relative grid grid-cols-[66px_minmax(0,1fr)_18px] items-center gap-x-3 px-3 py-3 ${isPlaying ? 'bg-accent/[0.07]' : isLive ? 'bg-live/[0.035]' : ''}`}>
+    <div className={`relative grid grid-cols-[66px_minmax(0,1fr)_18px] items-center gap-x-3 px-3 py-2.5 ${isPlaying ? 'bg-accent/[0.07]' : isLive ? 'bg-live/[0.035]' : ''}`}>
       <span className={`absolute inset-y-2 left-0 w-[3px] rounded-r ${edge}`} aria-hidden="true" />
 
       <div className="flex flex-col items-center justify-center gap-1 self-stretch border-r border-line/70 pr-3 text-center">
@@ -92,21 +91,14 @@ export default function EventCard({ ev, now, open, isPlaying = false, showLeague
           ))}
         </div>
 
-        <div className="mt-2 flex flex-wrap items-center gap-1 pl-[32px]">
-          {showLeague && ev.league && (
-            <span className="mr-1 max-w-full truncate text-[10px] uppercase tracking-wide text-muted/70">{ev.league}</span>
-          )}
-          {sortSites(ev.sites).map((s) => (
-            <span
-              key={s.site}
-              title={SITE_NAME[s.site] || s.site}
-              className={`rounded px-1.5 py-[3px] text-[9.5px] font-medium leading-none ${PLAYABLE.has(s.site) ? 'border border-accent/25 bg-accent/10 text-accent' : 'border border-line bg-ink-800 text-muted'}`}
-            >
-              {SITE_SHORT[s.site] || s.site}
-            </span>
-          ))}
-          {isPlaying && <span className="ml-0.5 rounded bg-mint/15 px-1.5 py-[3px] text-[9.5px] font-bold uppercase leading-none tracking-wider text-mint">Playing</span>}
-        </div>
+        {(isPlaying || (showLeague && ev.league)) && (
+          <div className="mt-2 flex flex-wrap items-center gap-2 pl-[32px]">
+            {showLeague && ev.league && (
+              <span className="max-w-full truncate text-[10px] uppercase tracking-wide text-muted/70">{ev.league}</span>
+            )}
+            {isPlaying && <span className="rounded bg-mint/15 px-1.5 py-[3px] text-[9.5px] font-bold uppercase leading-none tracking-wider text-mint">Playing</span>}
+          </div>
+        )}
       </div>
 
       <Chevron open={open} className="text-muted/50" />
