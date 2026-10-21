@@ -194,7 +194,10 @@ function App() {
               </div>
             )}
           </div>
-          <p className="hidden pt-2 text-sm text-muted xl:block">Test 1247, hello, hello, hello</p>
+          <div className="hidden pt-2 text-sm text-muted xl:block">
+              <p>Test 1247, hello, hello, hello</p>
+              <p>183749 yes hello number 4</p>
+            </div>
           </div>
 
           {data && !data.error && (
