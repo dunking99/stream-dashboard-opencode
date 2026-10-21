@@ -74,7 +74,7 @@ export default function EventCard({ ev, now, open, isPlaying = false, showLeague
         <div className="shrink-0 text-right">
           {tbd ? (
             <>
-              <div className="font-display text-2xl font-semibold leading-none text-muted/60">TBD</div>
+              <div className="text-2xl font-semibold leading-none text-muted/60">TBD</div>
               <div className="mt-1.5 text-xs text-muted">Kickoff</div>
             </>
           ) : isLive ? (
@@ -87,7 +87,7 @@ export default function EventCard({ ev, now, open, isPlaying = false, showLeague
             </>
           ) : (
             <>
-              <div className={`whitespace-nowrap font-display text-2xl font-semibold leading-none tabular ${w.state === 'ended' ? 'text-muted/50' : 'text-white'}`}>
+              <div className={`whitespace-nowrap text-2xl font-semibold leading-none tabular ${w.state === 'ended' ? 'text-muted/50' : 'text-white'}`}>
                 {clock}{ampm && <span className="ml-0.5 text-[11px] font-medium text-muted">{ampm}</span>}
               </div>
               <div className={`mt-1.5 text-xs ${w.state === 'soon' ? 'font-semibold text-amber' : 'text-muted'}`}>
