@@ -148,7 +148,6 @@ function App() {
 
       <main className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] xl:grid-rows-[auto_minmax(0,1fr)]">
         <section className="order-1 min-h-0 space-y-4 p-4 lg:p-5 xl:order-none xl:col-start-1 xl:row-start-1">
-          <div className="flex items-start gap-4">
           <div className="relative aspect-video w-full max-w-[calc(56vh*16/9)] overflow-hidden rounded-xl border border-line bg-black shadow-2xl shadow-black/30">
             {!data ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
@@ -193,24 +192,6 @@ function App() {
                 </span>
               </div>
             )}
-          </div>
-          <div className="hidden pt-2 text-sm text-muted xl:block">
-              <p>Test 1247, hello, hello, hello</p>
-              <p>183749 yes hello number 4</p>
-              <svg viewBox="0 0 120 76" className="mt-3 w-56 rounded-md border border-line bg-[#0c2a1c]" role="img" aria-label="Test pitch">
-                <g fill="none" stroke="#2f6b4b" strokeWidth="1">
-                  <rect x="4" y="4" width="112" height="68" />
-                  <path d="M60 4v68" />
-                  <circle cx="60" cy="38" r="9" />
-                  <rect x="4" y="22" width="14" height="32" />
-                  <rect x="102" y="22" width="14" height="32" />
-                </g>
-                <circle r="3" fill="#fff">
-                  <animate attributeName="cx" values="20;60;100;60;20" dur="6s" repeatCount="indefinite" />
-                  <animate attributeName="cy" values="38;20;38;56;38" dur="6s" repeatCount="indefinite" />
-                </circle>
-              </svg>
-            </div>
           </div>
 
           {data && !data.error && (
