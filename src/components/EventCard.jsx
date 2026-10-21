@@ -41,6 +41,8 @@ export function Chevron({ open, className = '' }) {
 
 const clamp2 = { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' };
 
+const RAIL_MS = 3 * 60 * 60 * 1000; // the rail fills over the last 3 hours before kickoff
+
 export default function EventCard({ ev, now, open, isPlaying = false, showLeague = false }) {
   const tbd = !ev.live && !ev.startMs;
   const w = ev.live || tbd ? null : whenOf(ev.startMs, now);
@@ -50,54 +52,54 @@ export default function EventCard({ ev, now, open, isPlaying = false, showLeague
     ? ev.teams.map((t, i) => ({ name: parts.length === 2 ? parts[i] : t.name, logo: t.logo }))
     : [{ name: ev.title, logo: ev.leagueLogo }];
 
-  const edge = isPlaying ? 'bg-accent' : isLive ? 'bg-live/70' : 'bg-transparent';
+  const fill = isLive ? 100 : w && w.state !== 'ended' ? Math.max(0, Math.min(100, Math.round((1 - (ev.startMs - now) / RAIL_MS) * 100))) : 0;
+  const [clock, ampm] = w ? w.time.split(/\s+/) : [];
 
   return (
-    <div className={`relative grid grid-cols-[76px_minmax(0,1fr)_18px] items-center gap-x-3.5 px-3 py-4 ${isPlaying ? 'bg-accent/[0.07]' : isLive ? 'bg-live/[0.035]' : ''}`}>
-      <span className={`absolute inset-y-2 left-0 w-[3px] rounded-r ${edge}`} aria-hidden="true" />
-
-      <div className="flex flex-col items-center justify-center gap-1 self-stretch border-r border-line/70 pr-3 text-center">
-        {tbd ? (
-          <>
-            <div className="font-display text-[19px] font-semibold leading-none text-muted/60">TBD</div>
-            <div className="text-[10.5px] uppercase tracking-wider text-muted/70">Kickoff</div>
-          </>
-        ) : isLive ? (
-          <>
-            <span className="inline-flex items-center gap-1 rounded-full bg-live/15 px-2 py-1 text-[10.5px] font-bold uppercase leading-none tracking-wider text-live">
-              <span className="h-1.5 w-1.5 rounded-full bg-live motion-safe:animate-pulse" aria-hidden="true" />
-              Live
-            </span>
-            <div className="text-[11px] tabular text-muted/80">{w ? w.time : '24/7'}</div>
-          </>
-        ) : (
-          <>
-            <div className={`whitespace-nowrap font-display text-[21px] font-semibold leading-none tabular ${w.state === 'ended' ? 'text-muted/50' : 'text-gray-50'}`}>
-              {w.time.split(/\s+/)[0]}
-              {w.time.split(/\s+/)[1] && <span className="ml-0.5 text-[10px] font-medium text-muted">{w.time.split(/\s+/)[1]}</span>}
-            </div>
-            <div className={`text-[10.5px] uppercase tracking-wider ${w.state === 'soon' ? 'font-bold text-amber' : 'text-muted/70'}`}>{w.label}</div>
-          </>
-        )}
-        {isPlaying && <span className="mt-0.5 rounded bg-mint/15 px-1.5 py-[3px] text-[9px] font-bold uppercase leading-none tracking-wider text-mint">Playing</span>}
+    <div>
+      <div className="h-1 bg-line/60" aria-hidden="true">
+        <div className={`h-full ${isLive ? 'bg-live' : 'bg-amber'}`} style={{ width: `${fill}%` }} />
       </div>
-
-      <div className="min-w-0">
-        <div className="space-y-2.5">
+      <div className="flex items-center gap-4 px-4 py-4">
+        <div className="min-w-0 flex-1 space-y-3">
           {sides.map((t, i) => (
-            <div key={i} className="grid grid-cols-[30px_minmax(0,1fr)] items-center gap-3">
-              <Crest src={t.logo} name={t.name} size={30} />
-              <span className={`min-w-0 text-[15px] leading-snug ${isPlaying ? 'font-semibold text-white' : 'font-medium text-gray-100'}`} style={clamp2}>{t.name}</span>
+            <div key={i} className="flex min-w-0 items-center gap-3.5">
+              <Crest src={t.logo} name={t.name} size={36} />
+              <span className="min-w-0 text-[17px] font-semibold leading-tight text-gray-50" style={clamp2}>{t.name}</span>
             </div>
           ))}
+          {showLeague && ev.league && <div className="truncate pl-[50px] text-[10px] uppercase tracking-wide text-muted/70">{ev.league}</div>}
         </div>
 
-        {showLeague && ev.league && (
-          <div className="mt-2 truncate pl-[42px] text-[10px] uppercase tracking-wide text-muted/70">{ev.league}</div>
-        )}
-      </div>
+        <div className="shrink-0 text-right">
+          {tbd ? (
+            <>
+              <div className="font-display text-2xl font-semibold leading-none text-muted/60">TBD</div>
+              <div className="mt-1.5 text-xs text-muted">Kickoff</div>
+            </>
+          ) : isLive ? (
+            <>
+              <div className="flex items-center justify-end gap-1.5 text-base font-semibold text-live">
+                <span className="h-2 w-2 rounded-full bg-live motion-safe:animate-pulse" aria-hidden="true" />
+                Live
+              </div>
+              <div className="mt-1 text-xs text-muted">{w ? `Started ${w.time}` : '24/7'}</div>
+            </>
+          ) : (
+            <>
+              <div className={`whitespace-nowrap font-display text-2xl font-semibold leading-none tabular ${w.state === 'ended' ? 'text-muted/50' : 'text-white'}`}>
+                {clock}{ampm && <span className="ml-0.5 text-[11px] font-medium text-muted">{ampm}</span>}
+              </div>
+              <div className={`mt-1.5 text-xs ${w.state === 'soon' ? 'font-semibold text-amber' : 'text-muted'}`}>
+                {w.label}
+              </div>
+            </>
+          )}
+          {isPlaying && <div className="mt-1.5 text-[10px] font-bold uppercase tracking-wider text-mint">Playing</div>}
+        </div>
 
-      <Chevron open={open} className="text-muted/50" />
+        <Chevron open={open} className="shrink-0 text-muted/60" />
+      </div>
     </div>
   );
 }

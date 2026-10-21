@@ -131,7 +131,7 @@ export default function MatchedEvents({ onPlay, onRecheck, onShowSources, playin
     const isOpen = open === key;
     const isPlaying = Boolean(playing && (ev.sites || []).some((s) => pathOf(s.site, s.id) === playing.eventPath));
     return (
-      <div key={key} className={`overflow-hidden border-b border-line last:border-b-0 ${isOpen ? 'bg-ink-850/60' : ''}`}>
+      <div key={key} className={`mx-3 my-2.5 overflow-hidden rounded-xl border bg-ink-850/60 transition ${isPlaying ? 'border-accent/70' : 'border-line hover:border-accent/40'}`}>
         <button
           type="button"
           onClick={() => { setOpen(isOpen ? null : key); setOpenSite(null); }}
