@@ -219,13 +219,17 @@ export default function MatchedEvents({ onPlay, onRecheck, onShowSources, playin
 
   return (
     <div className="flex flex-col xl:h-full">
-      <div className="shrink-0 border-b border-line px-4 py-3">
+      <div className="shrink-0 border-b border-line bg-ink-900/40 px-4 pb-3 pt-4">
         <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-sm font-semibold text-gray-100">Events</h2>
-            <p className="mt-0.5 text-[11px] text-muted">
-              {loading ? 'Loading events…' : `${visibleCount} shown${liveCount ? ` · ${liveCount} live` : ''}`}
-            </p>
+          <div className="flex items-baseline gap-2.5">
+            <h2 className="text-base font-semibold tracking-tight text-gray-50">Events</h2>
+            {liveCount > 0 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-live/15 px-2 py-0.5 text-[11px] font-bold text-live">
+                <span className="h-1.5 w-1.5 rounded-full bg-live motion-safe:animate-pulse" aria-hidden="true" />
+                {liveCount} live
+              </span>
+            )}
+            <span className="text-[11px] text-muted">{loading ? 'Loading…' : `${visibleCount} shown`}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <button type="button" onClick={onRecheck} className="btn" aria-label="Re-check match clocks" title="Re-check match clocks">
@@ -241,60 +245,58 @@ export default function MatchedEvents({ onPlay, onRecheck, onShowSources, playin
           </div>
         </div>
 
-        <div className="mt-3 space-y-2">
+        <div className="mt-3.5 space-y-2.5">
           <label className="relative block">
             <span className="sr-only">Search events</span>
-            <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.7" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true">
+            <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.7" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true">
               <circle cx="9" cy="9" r="5.5" /><path d="m13.5 13.5 3 3" strokeLinecap="round" />
             </svg>
             <input value={query} onChange={(e) => { setQuery(e.target.value); setLeague('all'); }} placeholder="Search teams or leagues" className="field pl-9" />
           </label>
 
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <select
               value={sport}
               onChange={(e) => { setSport(e.target.value); setLeague('all'); setOpen(null); setOpenSite(null); setLoading(true); }}
-              className="field flex-1 py-1.5"
+              className="field py-1.5"
               aria-label="Sport"
             >
               {sports.length === 0 && <option value="football">Football</option>}
               {sports.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
             </select>
+            {grouped && leagueNames.length > 1 ? (
+              <select value={activeLeague} onChange={(e) => setLeague(e.target.value)} className="field py-1.5" aria-label="League">
+                <option value="all">All leagues</option>
+                {leagueNames.map((name) => <option key={name} value={name}>{name}</option>)}
+              </select>
+            ) : <span aria-hidden="true" />}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex flex-1 rounded-lg border border-line bg-ink-950 p-0.5" role="group" aria-label="Event window">
+              {[[false, 'Live & upcoming'], [true, 'All']].map(([val, label]) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setShowAll(val)}
+                  aria-pressed={showAll === val}
+                  className={`flex-1 rounded-md px-2 py-1.5 text-[11px] font-semibold transition ${showAll === val ? 'bg-ink-700 text-gray-50 shadow-sm' : 'text-muted hover:text-gray-200'}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               onClick={() => setGrouped((v) => !v)}
               aria-pressed={grouped}
+              title="Group by league"
               className={`btn shrink-0 ${grouped ? 'border-accent/40 bg-accent/10 text-accent' : ''}`}
             >
+              <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M3 5h14M3 10h9M3 15h5" /></svg>
               Group
             </button>
           </div>
-
-          <div className="flex rounded-lg border border-line bg-ink-950 p-0.5" role="group" aria-label="Event window">
-            <button
-              type="button"
-              onClick={() => setShowAll(false)}
-              aria-pressed={!showAll}
-              className={`flex-1 rounded-md px-2 py-1.5 text-[11px] font-semibold transition ${!showAll ? 'bg-ink-700 text-gray-100' : 'text-muted hover:text-gray-200'}`}
-            >
-              Live & upcoming
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowAll(true)}
-              aria-pressed={showAll}
-              className={`flex-1 rounded-md px-2 py-1.5 text-[11px] font-semibold transition ${showAll ? 'bg-ink-700 text-gray-100' : 'text-muted hover:text-gray-200'}`}
-            >
-              All
-            </button>
-          </div>
-
-          {grouped && leagueNames.length > 1 && (
-            <select value={activeLeague} onChange={(e) => setLeague(e.target.value)} className="field py-1.5" aria-label="League">
-              <option value="all">All leagues</option>
-              {leagueNames.map((name) => <option key={name} value={name}>{name}</option>)}
-            </select>
-          )}
         </div>
 
         {failed.length > 0 && (
@@ -323,11 +325,11 @@ export default function MatchedEvents({ onPlay, onRecheck, onShowSources, playin
         ) : grouped ? (
           shownGroups.map((g) => (
             <section key={g.name}>
-              <h3 className="sticky top-0 z-10 flex items-center gap-2 border-b border-line bg-ink-900/95 px-3 py-2 backdrop-blur">
+              <h3 className="sticky top-0 z-10 flex items-center gap-2.5 border-y border-line bg-ink-850/95 px-3 py-2 backdrop-blur">
                 <Crest src={g.logo} name={g.name} size={18} />
-                <span className="min-w-0 truncate text-[11px] font-semibold uppercase tracking-wide text-gray-300">{g.name}</span>
+                <span className="min-w-0 truncate text-[11px] font-bold uppercase tracking-wider text-gray-200">{g.name}</span>
                 {g.country && <span className="truncate text-[10px] text-muted/70">{g.country}</span>}
-                <span className="ml-auto text-[10px] tabular text-muted/70">{g.events.length}</span>
+                <span className="ml-auto rounded-full bg-ink-700 px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular text-muted">{g.events.length}</span>
               </h3>
               {g.events.map(renderEvent)}
             </section>
