@@ -43,7 +43,7 @@ const clamp2 = { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'v
 
 const RAIL_MS = 3 * 60 * 60 * 1000; // the rail fills over the last 3 hours before kickoff
 
-export default function EventCard({ ev, now, open, isPlaying = false, showLeague = false }) {
+export default function EventCard({ ev, now, open, isPlaying = false, showLeague = false, layout = 'list' }) {
   const tbd = !ev.live && !ev.startMs;
   const w = ev.live || tbd ? null : whenOf(ev.startMs, now);
   const isLive = ev.live || w?.state === 'live';
@@ -55,11 +55,55 @@ export default function EventCard({ ev, now, open, isPlaying = false, showLeague
   const fill = isLive ? 100 : w && w.state !== 'ended' ? Math.max(0, Math.min(100, Math.round((1 - (ev.startMs - now) / RAIL_MS) * 100))) : 0;
   const [clock, ampm] = w ? w.time.split(/\s+/) : [];
 
+  const fixture = layout === 'fixture' && sides.length === 2;
+
   return (
     <div>
       <div className="h-1 bg-line/60" aria-hidden="true">
         <div className={`h-full ${isLive ? 'bg-live' : 'bg-amber'}`} style={{ width: `${fill}%` }} />
       </div>
+      {fixture ? (
+        <>
+      <div className="relative px-4 py-4">
+        <Chevron open={open} className="absolute right-3 top-3 text-muted/50" />
+        {/* crest | kickoff | crest share one centre line; names hang under their crests in a fixed two-line slot */}
+        <div className="grid items-center gap-x-3 gap-y-2" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
+          <div className="flex justify-center"><Crest src={sides[0].logo} name={sides[0].name} size={46} /></div>
+          <div className="flex flex-col items-center justify-center gap-1 text-center" style={{ minWidth: 92, height: 76 }}>
+            {tbd ? (
+              <>
+                <div className="text-2xl font-semibold leading-none text-muted/60">TBD</div>
+                <div className="text-xs text-muted">Kickoff</div>
+              </>
+            ) : isLive ? (
+              <>
+                <span className="flex items-center gap-1.5 rounded-full bg-live/15 px-2.5 py-1 text-xs font-bold text-live">
+                  <span className="h-1.5 w-1.5 rounded-full bg-live motion-safe:animate-pulse" aria-hidden="true" />
+                  LIVE
+                </span>
+                <span className="text-xs text-muted">{w ? `Started ${w.time}` : '24/7'}</span>
+              </>
+            ) : (
+              <>
+                <span className="text-xs text-muted">{w.state === 'soon' ? 'Today' : w.state === 'ended' ? 'Finished' : w.label}</span>
+                <span className={`whitespace-nowrap text-3xl font-semibold leading-none tabular ${w.state === 'ended' ? 'text-muted/50' : 'text-white'}`}>
+                  {clock}{ampm && <span className="ml-0.5 text-xs font-medium text-muted">{ampm}</span>}
+                </span>
+                {w.state === 'soon' && <span className="text-xs font-semibold text-amber">{w.label}</span>}
+              </>
+            )}
+          </div>
+          <div className="flex justify-center"><Crest src={sides[1].logo} name={sides[1].name} size={46} /></div>
+
+          <span className="self-start text-center text-sm font-semibold leading-tight text-gray-50" style={{ minHeight: '2.5em' }}>{sides[0].name}</span>
+          <span aria-hidden="true">{isPlaying && <span className="block text-center text-[10px] font-bold uppercase tracking-wider text-mint">Playing</span>}</span>
+          <span className="self-start text-center text-sm font-semibold leading-tight text-gray-50" style={{ minHeight: '2.5em' }}>{sides[1].name}</span>
+        </div>
+        {showLeague && ev.league && <div className="mt-2 truncate text-center text-[10px] uppercase tracking-wide text-muted/70">{ev.league}</div>}
+      </div>
+        </>
+      ) : (
+        <>
       <div className="flex items-center gap-4 px-4 py-4">
         <div className="min-w-0 flex-1 space-y-3">
           {sides.map((t, i) => (
@@ -100,6 +144,8 @@ export default function EventCard({ ev, now, open, isPlaying = false, showLeague
 
         <Chevron open={open} className="shrink-0 text-muted/60" />
       </div>
+        </>
+      )}
     </div>
   );
 }

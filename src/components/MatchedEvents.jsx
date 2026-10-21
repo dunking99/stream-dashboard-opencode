@@ -33,6 +33,8 @@ export default function MatchedEvents({ onPlay, onRecheck, onShowSources, playin
   const [query, setQuery] = useState('');
   const [showAll, setShowAll] = useState(false);
   const [grouped, setGrouped] = useState(true);
+  const [layout, setLayout] = useState(() => { try { return localStorage.getItem('events.layout') === 'fixture' ? 'fixture' : 'list'; } catch { return 'list'; } });
+  const pickLayout = (l) => { setLayout(l); try { localStorage.setItem('events.layout', l); } catch { /* storage blocked */ } };
   const [league, setLeague] = useState('all');
   const [open, setOpen] = useState(null);
   const [openSite, setOpenSite] = useState(null);
@@ -138,7 +140,7 @@ export default function MatchedEvents({ onPlay, onRecheck, onShowSources, playin
           aria-expanded={isOpen}
           className="w-full text-left transition hover:bg-ink-850/50"
         >
-          <EventCard ev={ev} now={now} open={isOpen} isPlaying={isPlaying} showLeague={!grouped} />
+          <EventCard ev={ev} now={now} open={isOpen} isPlaying={isPlaying} showLeague={!grouped} layout={layout} />
         </button>
 
         {isOpen && (
@@ -296,6 +298,14 @@ export default function MatchedEvents({ onPlay, onRecheck, onShowSources, playin
               <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M3 5h14M3 10h9M3 15h5" /></svg>
               Group
             </button>
+            <div className="flex shrink-0 rounded-lg border border-line bg-ink-950 p-0.5" role="group" aria-label="Card layout">
+              <button type="button" onClick={() => pickLayout('list')} aria-pressed={layout === 'list'} title="List: teams stacked, time on the right" aria-label="List layout" className={`rounded-md px-2 py-1.5 transition ${layout === 'list' ? 'bg-ink-700 text-gray-50' : 'text-muted hover:text-gray-200'}`}>
+                <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" /></svg>
+              </button>
+              <button type="button" onClick={() => pickLayout('fixture')} aria-pressed={layout === 'fixture'} title="Fixture: crests either side of the time" aria-label="Fixture layout" className={`rounded-md px-2 py-1.5 transition ${layout === 'fixture' ? 'bg-ink-700 text-gray-50' : 'text-muted hover:text-gray-200'}`}>
+                <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><circle cx="4.5" cy="10" r="2" /><circle cx="15.5" cy="10" r="2" /><path d="M8.5 10h3" /></svg>
+              </button>
+            </div>
           </div>
         </div>
 
