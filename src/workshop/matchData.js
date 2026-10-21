@@ -128,23 +128,42 @@ export const flagsOf = (d, name) => {
 // Pitch layout: rows from the formation string, left-right from the position code.
 const sideScore = (pos = '') => (/(^|-)L$|^(LB|LM|LW)$/.test(pos) ? -1 : /(^|-)R$|^(RB|RM|RW)$/.test(pos) ? 1 : 0);
 
-export function layoutTeam(lineup, side) {
+// The XI as rows, goalkeeper first: [[gk], [defenders...], ..., [forwards...]], each row left to right.
+export function rowsOf(lineup) {
   if (!lineup?.formation) return [];
-  const rows = lineup.formation.split('-').map(Number);
+  const parts = lineup.formation.split('-').map(Number);
   const xi = [...lineup.starters].sort((a, b) => Number(a.place) - Number(b.place));
-  if (xi.length !== 1 + rows.reduce((a, b) => a + b, 0)) return [];
-  const flip = (v) => (side === 'home' ? v : 100 - v);
-  const rowX = (i) => 6 + i * (40 / rows.length);
-  const out = [{ p: xi[0], x: flip(6), y: 50 }];
+  if (xi.length !== 1 + parts.reduce((a, b) => a + b, 0)) return [];
+  const rows = [[xi[0]]];
   let k = 1;
-  rows.forEach((n, r) => {
-    const row = xi.slice(k, k + n).sort((a, b) => sideScore(a.position) - sideScore(b.position) || Number(a.place) - Number(b.place));
+  for (const n of parts) {
+    rows.push(xi.slice(k, k + n).sort((a, b) => sideScore(a.position) - sideScore(b.position) || Number(a.place) - Number(b.place)));
     k += n;
-    row.forEach((p, j) => out.push({ p, x: flip(rowX(r + 1)), y: flip(8 + ((j + 1) / (n + 1)) * 84) }));
-  });
-  return out;
+  }
+  return rows;
 }
 
+// Landscape coordinates (0-100 each way), home attacking right: x = along the pitch, y = across.
+export function layoutTeam(lineup, side) {
+  const rows = rowsOf(lineup);
+  const flip = (v) => (side === 'home' ? v : 100 - v);
+  return rows.flatMap((row, r) => row.map((p, j) => ({
+    p, row: r,
+    x: flip(6 + r * (40 / (rows.length - 1))),
+    y: r === 0 ? 50 : flip(8 + ((j + 1) / (row.length + 1)) * 84),
+  })));
+}
+
+// Everyone on one pitch, as left / top percentages. `squeeze` pulls each half towards its own goal
+// so the two forward lines don't collide at halfway. `orient`: 'portrait' (home at the bottom,
+// attacking up) or 'landscape' (home on the left, attacking right).
+export function spots(d, orient = 'portrait', squeeze = 0.93) {
+  return ['home', 'away'].flatMap((side) => layoutTeam(d.lineups?.[side], side).map(({ p, row, x, y }) => {
+    const along = 6 + ((side === 'home' ? x : 100 - x) - 6) * squeeze; // 6 = own goal line, ~46 = halfway
+    const [left, top] = orient === 'portrait' ? [y, side === 'home' ? 100 - along : along] : [side === 'home' ? along : 100 - along, y];
+    return { side, p, row, left, top, f: flagsOf(d, p.name) };
+  }));
+}
 
 // black or white text, whichever reads on a team colour
 export const onColor = (hex) => {

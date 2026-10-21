@@ -9,5 +9,6 @@
 import eventRow from './designs/eventRow.jsx';
 import sourceCard from './designs/sourceCard.jsx';
 import matchCentre from './designs/matchCentre.jsx';
+import lineupPitch from './designs/lineupPitch.jsx';
 
-export const GROUPS = [eventRow, sourceCard, matchCentre];
+export const GROUPS = [eventRow, sourceCard, matchCentre, lineupPitch];
