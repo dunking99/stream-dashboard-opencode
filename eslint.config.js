@@ -17,5 +17,9 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+  },  {
+    // lab designs export a config object next to their components; they aren't hot-reload boundaries
+    files: ['src/workshop/designs/**/*.jsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
   },
 ])
