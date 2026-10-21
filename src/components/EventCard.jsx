@@ -66,10 +66,10 @@ export default function EventCard({ ev, now, open, isPlaying = false, showLeague
         <>
       <div className="relative px-4 py-4">
         <Chevron open={open} className="absolute right-3 top-3 text-muted/50" />
-        {/* crest | kickoff | crest share one centre line; names hang under their crests in a fixed two-line slot */}
-        <div className="grid items-center gap-x-3 gap-y-2" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
-          <div className="flex justify-center"><Crest src={sides[0].logo} name={sides[0].name} size={46} /></div>
-          <div className="flex flex-col items-center justify-center gap-1 text-center" style={{ minWidth: 92, height: 76 }}>
+        {/* the kickoff spans both rows so it sits in the middle of the card; names hang under their crests in a fixed two-line slot */}
+        <div className="grid items-center gap-x-3 gap-y-2.5" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
+          <div className="flex justify-center" style={{ gridColumn: 1, gridRow: 1 }}><Crest src={sides[0].logo} name={sides[0].name} size={64} /></div>
+          <div className="flex flex-col items-center justify-center gap-1 text-center" style={{ gridColumn: 2, gridRow: '1 / span 2', minWidth: 92 }}>
             {tbd ? (
               <>
                 <div className="text-2xl font-semibold leading-none text-muted/60">TBD</div>
@@ -92,12 +92,12 @@ export default function EventCard({ ev, now, open, isPlaying = false, showLeague
                 {w.state === 'soon' && <span className="text-xs font-semibold text-amber">{w.label}</span>}
               </>
             )}
+            {isPlaying && <span className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-mint">Playing</span>}
           </div>
-          <div className="flex justify-center"><Crest src={sides[1].logo} name={sides[1].name} size={46} /></div>
+          <div className="flex justify-center" style={{ gridColumn: 3, gridRow: 1 }}><Crest src={sides[1].logo} name={sides[1].name} size={64} /></div>
 
-          <span className="self-start text-center text-sm font-semibold leading-tight text-gray-50" style={{ minHeight: '2.5em' }}>{sides[0].name}</span>
-          <span aria-hidden="true">{isPlaying && <span className="block text-center text-[10px] font-bold uppercase tracking-wider text-mint">Playing</span>}</span>
-          <span className="self-start text-center text-sm font-semibold leading-tight text-gray-50" style={{ minHeight: '2.5em' }}>{sides[1].name}</span>
+          <span className="self-start text-center text-base font-semibold leading-tight text-gray-50" style={{ gridColumn: 1, gridRow: 2, minHeight: '2.5em' }}>{sides[0].name}</span>
+          <span className="self-start text-center text-base font-semibold leading-tight text-gray-50" style={{ gridColumn: 3, gridRow: 2, minHeight: '2.5em' }}>{sides[1].name}</span>
         </div>
         {showLeague && ev.league && <div className="mt-2 truncate text-center text-[10px] uppercase tracking-wide text-muted/70">{ev.league}</div>}
       </div>
