@@ -66,10 +66,10 @@ export default function EventCard({ ev, now, open, isPlaying = false, showLeague
         <>
       <div className="relative px-4 py-4">
         <Chevron open={open} className="absolute right-3 top-3 text-muted/50" />
-        {/* the kickoff spans both rows so it sits in the middle of the card; names hang under their crests in a fixed two-line slot */}
+        {/* crest | kickoff | crest share one centre line; names hang under their crests in a fixed two-line slot */}
         <div className="grid items-center gap-x-3 gap-y-2.5" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
           <div className="flex justify-center" style={{ gridColumn: 1, gridRow: 1 }}><Crest src={sides[0].logo} name={sides[0].name} size={64} /></div>
-          <div className="flex flex-col items-center justify-center gap-1 text-center" style={{ gridColumn: 2, gridRow: '1 / span 2', minWidth: 92 }}>
+          <div className="flex flex-col items-center justify-center gap-1 text-center" style={{ gridColumn: 2, gridRow: 1, minWidth: 92 }}>
             {tbd ? (
               <>
                 <div className="text-2xl font-semibold leading-none text-muted/60">TBD</div>
