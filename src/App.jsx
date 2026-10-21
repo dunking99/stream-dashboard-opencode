@@ -5,7 +5,7 @@ import MatchedEvents from './components/MatchedEvents';
 import MatchClock from './components/MatchClock';
 import VideoPlayer from './components/VideoPlayer';
 import MatchCentre from './components/MatchCentre';
-import MatchTimeline from './components/MatchTimeline';
+import LiveLineup from './components/LiveLineup';
 import ChannelStrip from './components/ChannelStrip';
 import SourcePanel from './components/SourcePanel';
 import SitesDrawer from './components/SitesDrawer';
@@ -221,7 +221,7 @@ function App() {
         </section>
         {data && !data.error && room >= 300 && (
           <div className="relative hidden min-w-0 flex-1 py-4 pr-4 xl:block lg:py-5 lg:pr-5">
-            <div className="absolute inset-y-4 left-0 right-4 lg:inset-y-5 lg:right-5"><MatchTimeline /></div>
+            <div className="absolute inset-y-4 left-0 right-4 lg:inset-y-5 lg:right-5"><LiveLineup key={`${data.espnId}:${data.espnPath}`} espnId={data.espnId} espnPath={data.espnPath} /></div>
           </div>
         )}
         </div>

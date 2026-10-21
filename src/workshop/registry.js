@@ -13,5 +13,6 @@ import matchCentre from './designs/matchCentre.jsx';
 import lineupPitch from './designs/lineupPitch.jsx';
 import chalkboardKit from './designs/chalkboardKit.jsx';
 import gallery from './designs/gallery.jsx';
+import liveLineup from './designs/liveLineup.jsx';
 
-export const GROUPS = [eventRow, sourceCard, matchCentre, lineupPitch, chalkboardKit, gallery];
+export const GROUPS = [eventRow, sourceCard, matchCentre, lineupPitch, chalkboardKit, liveLineup, gallery];
