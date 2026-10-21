@@ -107,6 +107,17 @@ export default function Workshop() {
   });
   const starCount = (g) => g.variants.filter((v) => starred[`${g.id}:${v.id}`]).length;
 
+  // a whole-page design takes the entire window; a small tab leads back to the lab
+  if (group.fullPage) {
+    const Page = group.Page;
+    return (
+      <>
+        <Page />
+        <a href={`#${GROUPS[0].id}`} className="fixed bottom-3 left-[150px] z-[100] rounded-md border border-white/20 bg-black/80 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur hover:bg-black">← Design lab</a>
+      </>
+    );
+  }
+
   let shown = onlyStarred ? group.variants.filter((v) => starred[key(v)]) : group.variants;
   if (view === 'focus') {
     const pick = shown.find((v) => v.id === focusId) || shown[0];

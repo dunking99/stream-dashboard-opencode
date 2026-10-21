@@ -76,7 +76,7 @@ const BASE = {
 };
 
 // the match as it stood at `minute` (flags and score follow the clock)
-function at(minute, state) {
+export function at(minute, state) {
   const timeline = TIMELINE.filter((e) => e.min <= minute);
   const goals = (side) => timeline.filter((e) => e.side === side && e.scoring).length;
   const mark = (lu) => ({
