@@ -10,5 +10,6 @@ import eventRow from './designs/eventRow.jsx';
 import sourceCard from './designs/sourceCard.jsx';
 import matchCentre from './designs/matchCentre.jsx';
 import lineupPitch from './designs/lineupPitch.jsx';
+import chalkboardKit from './designs/chalkboardKit.jsx';
 
-export const GROUPS = [eventRow, sourceCard, matchCentre, lineupPitch];
+export const GROUPS = [eventRow, sourceCard, matchCentre, lineupPitch, chalkboardKit];
