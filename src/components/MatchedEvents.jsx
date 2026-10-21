@@ -23,7 +23,7 @@ function StreamClock({ playing, eventPath, index }) {
 const pathOf = (site, id) => (site === 'roxie' ? id : `${site}:${id}`);
 const ended = (ev, now) => !ev.live && ev.startMs > 0 && whenOf(ev.startMs, now).state === 'ended';
 
-export default function MatchedEvents({ onPlay, onRecheck, playing }) {
+export default function MatchedEvents({ onPlay, onRecheck, onShowSources, playing }) {
   const [sports, setSports] = useState([]);
   const [sport, setSport] = useState('football');
   const [events, setEvents] = useState([]);
@@ -227,12 +227,18 @@ export default function MatchedEvents({ onPlay, onRecheck, playing }) {
               {loading ? 'Loading events…' : `${visibleCount} shown${liveCount ? ` · ${liveCount} live` : ''}`}
             </p>
           </div>
-          <button type="button" onClick={onRecheck} className="btn" aria-label="Re-check match clocks" title="Re-check match clocks">
-            <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M16 10a6 6 0 1 1-1.8-4.3M16 4v4h-4" />
-            </svg>
-            Clocks
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button type="button" onClick={onRecheck} className="btn" aria-label="Re-check match clocks" title="Re-check match clocks">
+              <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M16 10a6 6 0 1 1-1.8-4.3M16 4v4h-4" />
+              </svg>
+              Clocks
+            </button>
+            <button type="button" onClick={onShowSources} className="btn" title="Show the sources column">
+              <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><rect x="3" y="4" width="14" height="4" rx="1" /><rect x="3" y="12" width="14" height="4" rx="1" /></svg>
+              Sources
+            </button>
+          </div>
         </div>
 
         <div className="mt-3 space-y-2">
