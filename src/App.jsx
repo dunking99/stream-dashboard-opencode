@@ -5,6 +5,7 @@ import MatchedEvents from './components/MatchedEvents';
 import MatchClock from './components/MatchClock';
 import VideoPlayer from './components/VideoPlayer';
 import MatchCentre from './components/MatchCentre';
+import MatchTimeline from './components/MatchTimeline';
 import ChannelStrip from './components/ChannelStrip';
 import SourcePanel from './components/SourcePanel';
 import SitesDrawer from './components/SitesDrawer';
@@ -17,6 +18,20 @@ function App() {
   const [sitesOpen, setSitesOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [panel, setPanel] = useState('events');
+  const wrapRef = useRef(null);
+  const [room, setRoom] = useState(0); // free width beside the video, for the timeline
+  useEffect(() => {
+    const measure = () => {
+      const el = wrapRef.current;
+      if (!el) return;
+      setRoom(Math.floor(el.clientWidth - (0.68 * window.innerHeight * 16) / 9 - 40 - 16));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (wrapRef.current) ro.observe(wrapRef.current);
+    window.addEventListener('resize', measure);
+    return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
+  }, []);
   const [recheck, setRecheck] = useState(0);
   const [scanned, setScanned] = useState(false);
   const videoRef = useRef(null);
@@ -148,7 +163,8 @@ function App() {
       )}
 
       <main className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <section className="order-1 min-h-0 space-y-4 p-4 lg:p-5 xl:order-none xl:col-start-1 xl:row-start-1 xl:max-w-[calc(68vh*16/9+2.5rem)]">
+        <div ref={wrapRef} className="order-1 flex min-w-0 xl:order-none xl:col-start-1 xl:row-start-1">
+        <section className="min-h-0 w-full shrink-0 space-y-4 p-4 lg:p-5 xl:max-w-[calc(68vh*16/9+2.5rem)]">
           <div className="relative aspect-video w-full max-w-[calc(68vh*16/9)] overflow-hidden rounded-xl border border-line bg-black shadow-2xl shadow-black/30">
             {!data ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
@@ -203,6 +219,12 @@ function App() {
             <MatchClock key={playerKey} videoRef={videoRef} auto={auto} home={home} away={away} />
           )}
         </section>
+        {data && !data.error && room >= 300 && (
+          <div className="relative hidden min-w-0 flex-1 py-4 pr-4 xl:block lg:py-5 lg:pr-5">
+            <div className="absolute inset-y-4 left-0 right-4 lg:inset-y-5 lg:right-5"><MatchTimeline /></div>
+          </div>
+        )}
+        </div>
 
         <aside className="order-2 flex min-h-0 flex-col border-t border-line xl:order-none xl:col-start-2 xl:row-span-2 xl:row-start-1 xl:h-screen xl:self-start xl:sticky xl:top-0 xl:border-l xl:border-t-0">
           <div className={panel === 'events' ? 'flex min-h-0 flex-1 flex-col' : 'hidden'}>
