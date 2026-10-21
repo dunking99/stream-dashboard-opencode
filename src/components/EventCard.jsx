@@ -41,12 +41,6 @@ export function Chevron({ open, className = '' }) {
 
 const clamp2 = { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' };
 
-// Fixture names: shrink longer ones so nearly all stay on one line; only the very longest wrap, balanced.
-const fixtureName = (name) => {
-  const fit = 118 / (name.length * 0.52); // px of font size that keeps the name inside its ~120px column
-  return fit >= 11.5 ? { fontSize: Math.min(16, Math.floor(fit * 2) / 2), whiteSpace: 'nowrap' } : { fontSize: 13, textWrap: 'balance' };
-};
-
 const RAIL_MS = 3 * 60 * 60 * 1000; // the rail fills over the last 3 hours before kickoff
 
 export default function EventCard({ ev, now, open, isPlaying = false, showLeague = false, layout = 'list' }) {
@@ -75,7 +69,7 @@ export default function EventCard({ ev, now, open, isPlaying = false, showLeague
         {/* crest | kickoff | crest share one centre line; names hang under their crests in a fixed two-line slot */}
         <div className="grid items-center gap-x-3 gap-y-2.5" style={{ gridTemplateColumns: 'minmax(0,1fr) auto minmax(0,1fr)' }}>
           <div className="flex justify-center" style={{ gridColumn: 1, gridRow: 1 }}><Crest src={sides[0].logo} name={sides[0].name} size={64} /></div>
-          <div className="flex flex-col items-center justify-center gap-1 text-center" style={{ gridColumn: 2, gridRow: 1, minWidth: 84 }}>
+          <div className="flex flex-col items-center justify-center gap-1 text-center" style={{ gridColumn: 2, gridRow: 1, minWidth: 76 }}>
             {tbd ? (
               <>
                 <div className="text-2xl font-semibold leading-none text-muted/60">TBD</div>
@@ -102,8 +96,8 @@ export default function EventCard({ ev, now, open, isPlaying = false, showLeague
           </div>
           <div className="flex justify-center" style={{ gridColumn: 3, gridRow: 1 }}><Crest src={sides[1].logo} name={sides[1].name} size={64} /></div>
 
-          <span className="self-start text-center font-semibold leading-tight text-gray-50" style={{ gridColumn: 1, gridRow: 2, ...fixtureName(sides[0].name) }}>{sides[0].name}</span>
-          <span className="self-start text-center font-semibold leading-tight text-gray-50" style={{ gridColumn: 3, gridRow: 2, ...fixtureName(sides[1].name) }}>{sides[1].name}</span>
+          <span className="self-start truncate text-center text-sm font-semibold leading-tight text-gray-50" style={{ gridColumn: 1, gridRow: 2 }} title={sides[0].name}>{sides[0].name}</span>
+          <span className="self-start truncate text-center text-sm font-semibold leading-tight text-gray-50" style={{ gridColumn: 3, gridRow: 2 }} title={sides[1].name}>{sides[1].name}</span>
         </div>
         {showLeague && ev.league && <div className="mt-2 truncate text-center text-[10px] uppercase tracking-wide text-muted/70">{ev.league}</div>}
       </div>
